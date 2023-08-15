@@ -13,33 +13,19 @@ struct TokenFees {
 
 /// @notice Detects the buy and sell tax for a fee-on-transfer token
 contract FeeOnTransferDetector {
-    string internal constant FOT_REVERT_STRING = "FOT";
-    // https://github.com/Uniswap/v2-core/blob/1136544ac842ff48ae0b1b939701436598d74075/contracts/UniswapV2Pair.sol#L46
-    string internal constant STF_REVERT_STRING_SUFFIX = "TRANSFER_FAILED";
     address internal immutable factoryV2;
 
     constructor(address _factoryV2) {
         factoryV2 = _factoryV2;
     }
 
-    function batchValidate(address[] calldata tokens, address[] calldata baseTokens, uint256 amountToBorrow)
+    function batchValidate(address[] calldata tokens, address baseToken, uint256 amountToBorrow)
         public
-        override
         returns (TokenFees[] memory fotResults)
     {
         fotResults = new TokenFees[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
-            fotResults[i] = validate(tokens[i], baseTokens, amountToBorrow);
-        }
-    }
-
-    function validate(address token, address[] calldata baseTokens, uint256 amountToBorrow)
-        public
-        override
-        returns (TokenFees memory)
-    {
-        for (uint256 i = 0; i < baseTokens.length; i++) {
-            return _validate(token, baseTokens[i], amountToBorrow);
+            fotResults[i] = _validate(tokens[i], baseToken, amountToBorrow);
         }
     }
 
@@ -48,7 +34,7 @@ contract FeeOnTransferDetector {
             return TokenFees(0, 0);
         }
 
-        address pairAddress = UniswapV2Library.pairFor(this.factoryV2(), token, baseToken);
+        address pairAddress = UniswapV2Library.pairFor(factoryV2, token, baseToken);
 
         // If the token/baseToken pair exists, get token0.
         // Must do low level call as try/catch does not support case where contract does not exist.
@@ -69,42 +55,25 @@ contract FeeOnTransferDetector {
         IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
 
         try pair.swap(amount0Out, amount1Out, address(this), abi.encode(balanceBeforeLoan, amountToBorrow)) {}
-        catch Error(string memory reason) {
-            return abi.decode(bytes(reason), (TokenFees));
+        catch (bytes memory reason) {
+            return parseRevertReason(reason);
         }
 
         // Swap always reverts so should never reach.
         revert("Unexpected error");
     }
 
-    function isFotFailed(string memory reason) internal pure returns (bool) {
-        return keccak256(bytes(reason)) == keccak256(bytes(FOT_REVERT_STRING));
+    function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
+        if (reason.length != 256 * 2) {
+            assembly {
+                revert(add(32, reason), mload(reason))
+            }
+        } else {
+            return abi.decode(reason, (TokenFees));
+        }
     }
 
-    function isTransferFailed(string memory reason) internal pure returns (bool) {
-        // We check the suffix of the revert string so we can support forks that
-        // may have modified the prefix.
-        string memory stf = STF_REVERT_STRING_SUFFIX;
-
-        uint256 reasonLength = bytes(reason).length;
-        uint256 suffixLength = bytes(stf).length;
-        if (reasonLength < suffixLength) {
-            return false;
-        }
-
-        uint256 ptr;
-        uint256 offset = 32 + reasonLength - suffixLength;
-        bool transferFailed;
-        assembly {
-            ptr := add(reason, offset)
-            let suffixPtr := add(stf, 32)
-            transferFailed := eq(keccak256(ptr, suffixLength), keccak256(suffixPtr, suffixLength))
-        }
-
-        return transferFailed;
-    }
-
-    function uniswapV2Call(address, uint256 amount0, uint256, bytes calldata data) external view override {
+    function uniswapV2Call(address, uint256 amount0, uint256, bytes calldata data) external {
         IUniswapV2Pair pair = IUniswapV2Pair(msg.sender);
         (address token0, address token1) = (pair.token0(), pair.token1());
 
@@ -117,13 +86,15 @@ contract FeeOnTransferDetector {
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         tokenBorrowed.transfer(address(pair), amountBorrowed);
         uint256 buyTax = tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan - amountBorrowed;
-        revert(
-            abi.encode(
-                TokenFees({
-                    buyTaxBps: buyTax * 10000 / amountRequestedToBorrow,
-                    sellTaxBps: sellTax * 10000 / amountBorrowed
-                })
-            )
+
+        bytes memory fees = abi.encode(
+            TokenFees({
+                buyTaxBps: buyTax * 10000 / amountRequestedToBorrow,
+                sellTaxBps: sellTax * 10000 / amountBorrowed
+            })
         );
+        assembly {
+            revert(add(32, fees), mload(fees))
+        }
     }
 }
