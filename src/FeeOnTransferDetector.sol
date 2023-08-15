@@ -2,9 +2,9 @@
 pragma solidity =0.8.19;
 pragma abicoder v2;
 
-import 'solmate/tokens/ERC20.sol';
-import 'v2-core/interfaces/IUniswapV2Pair.sol';
-import './UniswapV2Library.sol';
+import "solmate/tokens/ERC20.sol";
+import "v2-core/interfaces/IUniswapV2Pair.sol";
+import "./UniswapV2Library.sol";
 
 struct TokenFees {
     uint256 buyTaxBps;
@@ -13,41 +13,37 @@ struct TokenFees {
 
 /// @notice Detects the buy and sell tax for a fee-on-transfer token
 contract FeeOnTransferDetector {
-    string internal constant FOT_REVERT_STRING = 'FOT';
+    string internal constant FOT_REVERT_STRING = "FOT";
     // https://github.com/Uniswap/v2-core/blob/1136544ac842ff48ae0b1b939701436598d74075/contracts/UniswapV2Pair.sol#L46
-    string internal constant STF_REVERT_STRING_SUFFIX = 'TRANSFER_FAILED';
+    string internal constant STF_REVERT_STRING_SUFFIX = "TRANSFER_FAILED";
     address internal immutable factoryV2;
 
     constructor(address _factoryV2) {
         factoryV2 = _factoryV2;
     }
 
-    function batchValidate(
-        address[] calldata tokens,
-        address[] calldata baseTokens,
-        uint256 amountToBorrow
-    ) public override returns (TokenFees[] memory fotResults) {
+    function batchValidate(address[] calldata tokens, address[] calldata baseTokens, uint256 amountToBorrow)
+        public
+        override
+        returns (TokenFees[] memory fotResults)
+    {
         fotResults = new TokenFees[](tokens.length);
         for (uint256 i = 0; i < tokens.length; i++) {
             fotResults[i] = validate(tokens[i], baseTokens, amountToBorrow);
         }
     }
 
-    function validate(
-        address token,
-        address[] calldata baseTokens,
-        uint256 amountToBorrow
-    ) public override returns (TokenFees memory) {
+    function validate(address token, address[] calldata baseTokens, uint256 amountToBorrow)
+        public
+        override
+        returns (TokenFees memory)
+    {
         for (uint256 i = 0; i < baseTokens.length; i++) {
             return _validate(token, baseTokens[i], amountToBorrow);
         }
     }
 
-    function _validate(
-        address token,
-        address baseToken,
-        uint256 amountToBorrow
-    ) internal returns (TokenFees memory) {
+    function _validate(address token, address baseToken, uint256 amountToBorrow) internal returns (TokenFees memory) {
         if (token == baseToken) {
             return TokenFees(0, 0);
         }
@@ -72,14 +68,13 @@ contract FeeOnTransferDetector {
 
         IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
 
-        try
-            pair.swap(amount0Out, amount1Out, address(this), abi.encode(balanceBeforeLoan, amountToBorrow))
-        {} catch Error(string memory reason) {
+        try pair.swap(amount0Out, amount1Out, address(this), abi.encode(balanceBeforeLoan, amountToBorrow)) {}
+        catch Error(string memory reason) {
             return abi.decode(bytes(reason), (TokenFees));
         }
 
         // Swap always reverts so should never reach.
-        revert('Unexpected error');
+        revert("Unexpected error");
     }
 
     function isFotFailed(string memory reason) internal pure returns (bool) {
@@ -109,12 +104,7 @@ contract FeeOnTransferDetector {
         return transferFailed;
     }
 
-    function uniswapV2Call(
-        address,
-        uint256 amount0,
-        uint256,
-        bytes calldata data
-    ) external view override {
+    function uniswapV2Call(address, uint256 amount0, uint256, bytes calldata data) external view override {
         IUniswapV2Pair pair = IUniswapV2Pair(msg.sender);
         (address token0, address token1) = (pair.token0(), pair.token1());
 
@@ -127,9 +117,13 @@ contract FeeOnTransferDetector {
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         tokenBorrowed.transfer(address(pair), amountBorrowed);
         uint256 buyTax = tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan - amountBorrowed;
-        revert(abi.encode(TokenFees({
-            buyTaxBps: buyTax * 10000 / amountRequestedToBorrow,
-            sellTaxBps: sellTax * 10000 / amountBorrowed
-        })));
+        revert(
+            abi.encode(
+                TokenFees({
+                    buyTaxBps: buyTax * 10000 / amountRequestedToBorrow,
+                    sellTaxBps: sellTax * 10000 / amountBorrowed
+                })
+            )
+        );
     }
 }
