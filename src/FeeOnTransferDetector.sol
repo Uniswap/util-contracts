@@ -2,6 +2,7 @@
 pragma solidity =0.8.19;
 pragma abicoder v2;
 
+import "forge-std/console2.sol";
 import "solmate/tokens/ERC20.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./UniswapV2Library.sol";
@@ -13,12 +14,24 @@ struct TokenFees {
 
 /// @notice Detects the buy and sell tax for a fee-on-transfer token
 contract FeeOnTransferDetector {
+    error SameToken();
+    error PairLookupFailed();
+
     address internal immutable factoryV2;
 
     constructor(address _factoryV2) {
         factoryV2 = _factoryV2;
     }
 
+    /// @notice detects FoT fees for a single token
+    function validate(address token, address baseToken, uint256 amountToBorrow)
+        public
+        returns (TokenFees memory fotResult)
+    {
+        return _validate(token, baseToken, amountToBorrow);
+    }
+
+    /// @notice detects FoT fees for a batch of tokens
     function batchValidate(address[] calldata tokens, address baseToken, uint256 amountToBorrow)
         public
         returns (TokenFees[] memory fotResults)
@@ -29,16 +42,9 @@ contract FeeOnTransferDetector {
         }
     }
 
-    function validate(address token, address baseToken, uint256 amountToBorrow)
-        public
-        returns (TokenFees memory fotResult)
-    {
-        return _validate(token, baseToken, amountToBorrow);
-    }
-
-    function _validate(address token, address baseToken, uint256 amountToBorrow) internal returns (TokenFees memory) {
+    function _validate(address token, address baseToken, uint256 amountToBorrow) internal returns (TokenFees memory result) {
         if (token == baseToken) {
-            return TokenFees(0, 0);
+            revert SameToken();
         }
 
         address pairAddress = UniswapV2Library.pairFor(factoryV2, token, baseToken);
@@ -48,7 +54,7 @@ contract FeeOnTransferDetector {
         (, bytes memory returnData) = address(pairAddress).call(abi.encodeWithSelector(IUniswapV2Pair.token0.selector));
 
         if (returnData.length == 0) {
-            return TokenFees(0, 0);
+            revert PairLookupFailed();
         }
 
         address token0Address = abi.decode(returnData, (address));
@@ -63,15 +69,12 @@ contract FeeOnTransferDetector {
 
         try pair.swap(amount0Out, amount1Out, address(this), abi.encode(balanceBeforeLoan, amountToBorrow)) {}
         catch (bytes memory reason) {
-            return parseRevertReason(reason);
+            result = parseRevertReason(reason);
         }
-
-        // Swap always reverts so should never reach.
-        revert("Unexpected error");
     }
 
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
-        if (reason.length != 256 * 2) {
+        if (reason.length != 64) {
             assembly {
                 revert(add(32, reason), mload(reason))
             }
@@ -89,15 +92,15 @@ contract FeeOnTransferDetector {
         (uint256 balanceBeforeLoan, uint256 amountRequestedToBorrow) = abi.decode(data, (uint256, uint256));
         uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - balanceBeforeLoan;
 
-        uint256 sellTax = amountBorrowed - amountRequestedToBorrow;
+        uint256 sellTax = amountRequestedToBorrow - amountBorrowed;
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         tokenBorrowed.transfer(address(pair), amountBorrowed);
-        uint256 buyTax = tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan - amountBorrowed;
+        uint256 buyTax = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
 
         bytes memory fees = abi.encode(
             TokenFees({
-                buyTaxBps: buyTax * 10000 / amountRequestedToBorrow,
-                sellTaxBps: sellTax * 10000 / amountBorrowed
+                sellTaxBps: sellTax * 10000 / amountRequestedToBorrow,
+                buyTaxBps: buyTax * 10000 / amountBorrowed
             })
         );
         assembly {
