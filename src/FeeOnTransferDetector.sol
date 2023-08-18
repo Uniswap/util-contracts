@@ -2,17 +2,16 @@
 pragma solidity =0.8.19;
 pragma abicoder v2;
 
-import "forge-std/console2.sol";
 import "solmate/tokens/ERC20.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./UniswapV2Library.sol";
 
 struct TokenFees {
-    uint256 buyTaxBps;
-    uint256 sellTaxBps;
+    uint256 buyFeeBps;
+    uint256 sellFeeBps;
 }
 
-/// @notice Detects the buy and sell tax for a fee-on-transfer token
+/// @notice Detects the buy and sell fee for a fee-on-transfer token
 contract FeeOnTransferDetector {
     error SameToken();
     error PairLookupFailed();
@@ -92,15 +91,15 @@ contract FeeOnTransferDetector {
         (uint256 balanceBeforeLoan, uint256 amountRequestedToBorrow) = abi.decode(data, (uint256, uint256));
         uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - balanceBeforeLoan;
 
-        uint256 sellTax = amountRequestedToBorrow - amountBorrowed;
+        uint256 sellFee = amountRequestedToBorrow - amountBorrowed;
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         tokenBorrowed.transfer(address(pair), amountBorrowed);
-        uint256 buyTax = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
+        uint256 buyFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
 
         bytes memory fees = abi.encode(
             TokenFees({
-                sellTaxBps: sellTax * 10000 / amountRequestedToBorrow,
-                buyTaxBps: buyTax * 10000 / amountBorrowed
+                sellFeeBps: sellFee * 10000 / amountRequestedToBorrow,
+                buyFeeBps: buyFee * 10000 / amountBorrowed
             })
         );
         assembly {

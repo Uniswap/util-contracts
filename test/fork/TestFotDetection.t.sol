@@ -17,11 +17,11 @@ contract FotDetectionTest is Test{
 
     function testBulletToken() public {
         address bulletToken = 0x8ef32a03784c8Fd63bBf027251b9620865bD54B6;
-        uint256 expectedBuyTaxBps = 500;
-        uint256 expectedSellTaxBps = 500;
+        uint256 expectedBuyFeeBps = 500;
+        uint256 expectedSellFeeBps = 500;
 
         TokenFees memory fees = detector.validate(bulletToken, WETH, 10000000000);
-        assertEq(fees.buyTaxBps, expectedBuyTaxBps);
-        assertEq(fees.sellTaxBps, expectedSellTaxBps);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
     }
 }
