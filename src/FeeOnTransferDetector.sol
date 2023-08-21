@@ -41,7 +41,10 @@ contract FeeOnTransferDetector {
         }
     }
 
-    function _validate(address token, address baseToken, uint256 amountToBorrow) internal returns (TokenFees memory result) {
+    function _validate(address token, address baseToken, uint256 amountToBorrow)
+        internal
+        returns (TokenFees memory result)
+    {
         if (token == baseToken) {
             revert SameToken();
         }

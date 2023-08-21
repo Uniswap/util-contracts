@@ -21,7 +21,7 @@ contract MockFotToken is ERC20 {
         _mint(to, amount);
     }
 
-   function transfer(address to, uint256 amount) public override returns (bool) {
+    function transfer(address to, uint256 amount) public override returns (bool) {
         balanceOf[msg.sender] -= amount;
 
         // Cannot overflow because the sum of all user

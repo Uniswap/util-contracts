@@ -1,11 +1,10 @@
-
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 import {TokenFees, FeeOnTransferDetector} from "../../src/FeeOnTransferDetector.sol";
 
-contract FotDetectionTest is Test{
+contract FotDetectionTest is Test {
     FeeOnTransferDetector detector;
     address constant factoryV2 = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
     address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
