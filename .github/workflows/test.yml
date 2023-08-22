@@ -37,6 +37,15 @@ jobs:
           forge test -vvv
         id: test
 
+      - name: Run Forge integration tests
+        run: |
+          forge test -vvv
+        id: integ-test
+        env:
+          FOUNDRY_PROFILE: fork
+          FORK_URL: '${{ secrets.FORK_URL }}'
+
+
       - name: Run Forge fmt check
         run: |
           forge fmt --check
