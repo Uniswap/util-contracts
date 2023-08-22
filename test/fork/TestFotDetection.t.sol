@@ -15,11 +15,31 @@ contract FotDetectionTest is Test {
     }
 
     function testBulletToken() public {
-        address bulletToken = 0x8ef32a03784c8Fd63bBf027251b9620865bD54B6;
+        address token = 0x8ef32a03784c8Fd63bBf027251b9620865bD54B6;
         uint256 expectedBuyFeeBps = 500;
         uint256 expectedSellFeeBps = 500;
 
-        TokenFees memory fees = detector.validate(bulletToken, WETH, 10000000000);
+        TokenFees memory fees = detector.validate(token, WETH, 10000000000);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
+    }
+
+    function testXToken() public {
+        address token = 0xaBeC00542D141BDdF58649bfe860C6449807237c;
+        uint256 expectedBuyFeeBps = 100;
+        uint256 expectedSellFeeBps = 100;
+
+        TokenFees memory fees = detector.validate(token, WETH, 10000000000);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
+    }
+
+    function testKukuToken() public {
+        address token = 0x27206F5a9AFD0C51dA95F20972885545D3B33647;
+        uint256 expectedBuyFeeBps = 200;
+        uint256 expectedSellFeeBps = 200;
+
+        TokenFees memory fees = detector.validate(token, WETH, 10000000000);
         assertEq(fees.buyFeeBps, expectedBuyFeeBps);
         assertEq(fees.sellFeeBps, expectedSellFeeBps);
     }
