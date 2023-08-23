@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import "solmate/tokens/ERC20.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
-import "./UniswapV2Library.sol";
+import "./lib/UniswapV2Library.sol";
 
 struct TokenFees {
     uint256 buyFeeBps;
