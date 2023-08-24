@@ -31,14 +31,14 @@ contract FeeOnTransferDetectorTest is Test {
         IUniswapV2Pair(pair).sync();
 
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
-        assertEq(fees.sellFeeBps, 200);
-        assertEq(fees.buyFeeBps, 500);
+        assertEq(fees.buyFeeBps, 200);
+        assertEq(fees.sellFeeBps, 500);
     }
 
-    function testBasicFotTokenFuzz(uint16 sellFee, uint16 buyFee) public {
+    function testBasicFotTokenFuzz(uint16 buyFee, uint16 sellFee) public {
         sellFee = uint16(bound(sellFee, 0, 10000));
         buyFee = uint16(bound(buyFee, 0, 10000));
-        MockFotToken fotToken = new MockFotToken(sellFee, buyFee);
+        MockFotToken fotToken = new MockFotToken(buyFee, sellFee);
         MockToken otherToken = new MockToken();
         address pair = factory.deployPair(address(fotToken), address(otherToken));
         fotToken.setPair(pair);
@@ -47,8 +47,8 @@ contract FeeOnTransferDetectorTest is Test {
         IUniswapV2Pair(pair).sync();
 
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
-        assertEq(fees.sellFeeBps, sellFee);
         assertEq(fees.buyFeeBps, buyFee);
+        assertEq(fees.sellFeeBps, sellFee);
     }
 
     function testTransferFailsErrorPassthrough() public {

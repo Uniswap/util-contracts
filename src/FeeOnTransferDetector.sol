@@ -94,15 +94,15 @@ contract FeeOnTransferDetector {
         (uint256 balanceBeforeLoan, uint256 amountRequestedToBorrow) = abi.decode(data, (uint256, uint256));
         uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - balanceBeforeLoan;
 
-        uint256 sellFee = amountRequestedToBorrow - amountBorrowed;
+        uint256 buyFee = amountRequestedToBorrow - amountBorrowed;
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         tokenBorrowed.transfer(address(pair), amountBorrowed);
-        uint256 buyFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
+        uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
 
         bytes memory fees = abi.encode(
             TokenFees({
-                sellFeeBps: sellFee * 10000 / amountRequestedToBorrow,
-                buyFeeBps: buyFee * 10000 / amountBorrowed
+                buyFeeBps: buyFee * 10000 / amountRequestedToBorrow,
+                sellFeeBps: sellFee * 10000 / amountBorrowed
             })
         );
         assembly {
