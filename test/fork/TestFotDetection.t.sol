@@ -10,7 +10,7 @@ contract FotDetectionTest is Test {
     address constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("FORK_URL"), 17900000);
+        vm.createSelectFork(vm.envString("FORK_URL"));
         detector = new FeeOnTransferDetector(factoryV2);
     }
 
@@ -19,7 +19,7 @@ contract FotDetectionTest is Test {
         uint256 expectedBuyFeeBps = 500;
         uint256 expectedSellFeeBps = 500;
 
-        TokenFees memory fees = detector.validate(token, WETH, 10000000000);
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
         assertEq(fees.buyFeeBps, expectedBuyFeeBps);
         assertEq(fees.sellFeeBps, expectedSellFeeBps);
     }
@@ -29,7 +29,7 @@ contract FotDetectionTest is Test {
         uint256 expectedBuyFeeBps = 100;
         uint256 expectedSellFeeBps = 100;
 
-        TokenFees memory fees = detector.validate(token, WETH, 10000000000);
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
         assertEq(fees.buyFeeBps, expectedBuyFeeBps);
         assertEq(fees.sellFeeBps, expectedSellFeeBps);
     }
@@ -39,7 +39,37 @@ contract FotDetectionTest is Test {
         uint256 expectedBuyFeeBps = 200;
         uint256 expectedSellFeeBps = 200;
 
-        TokenFees memory fees = detector.validate(token, WETH, 10000000000);
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
+    }
+
+    function testCocoToken() public {
+        address token = 0xcB50350aB555Ed5d56265E096288536E8Cac41Eb;
+        uint256 expectedBuyFeeBps = 200;
+        uint256 expectedSellFeeBps = 200;
+
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
+    }
+
+    function testHarryPotter() public {
+        address token = 0x2577944fD4b556A99cC5aA0f072e4B944Aa088DF;
+        uint256 expectedBuyFeeBps = 100;
+        uint256 expectedSellFeeBps = 100;
+
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
+    }
+
+    function testPaypal() public {
+        address token = 0xe0A8ED732658832Fac18141AA5AD3542e2EB503B;
+        uint256 expectedBuyFeeBps = 100;
+        uint256 expectedSellFeeBps = 100;
+
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
         assertEq(fees.buyFeeBps, expectedBuyFeeBps);
         assertEq(fees.sellFeeBps, expectedSellFeeBps);
     }
