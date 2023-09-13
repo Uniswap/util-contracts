@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {MockToken} from "./mock/MockToken.sol";
 import {FeeCollector} from "../src/FeeCollector.sol";
-import {IUniversalRouter} from "../src/external/IUniversalRouter.sol";
+import {IUniversalRouter} from "universal-router/contracts/interfaces/IUniversalRouter.sol";
 
 contract FeeCollectorTest is Test {
     FeeCollector public collector;
@@ -48,7 +48,7 @@ contract FeeCollectorTest is Test {
         assertEq(mockUSDC.balanceOf(address(usdcRecipient)), 0);
         mockUSDC.mint(address(collector), 100 ether);
         assertEq(mockUSDC.balanceOf(address(collector)), 100 ether);
-        vm.expectRevert(FeeCollector.CallerNotAllowlisted.selector);
+        vm.expectRevert("UNAUTHORIZED");
         vm.prank(address(0xbeef));
         collector.withdrawUSDC();
         assertEq(mockUSDC.balanceOf(address(collector)), 100 ether);
