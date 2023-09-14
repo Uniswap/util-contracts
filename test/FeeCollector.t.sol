@@ -3,9 +3,9 @@ pragma solidity >=0.8.13;
 
 import {Test} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
 import {MockToken} from "./mock/MockToken.sol";
 import {FeeCollector} from "../src/FeeCollector.sol";
-import {IUniversalRouter} from "../src/external/IUniversalRouter.sol";
 
 contract FeeCollectorTest is Test {
     FeeCollector public collector;
@@ -29,6 +29,20 @@ contract FeeCollectorTest is Test {
         mockFeeToken = new MockToken();
 
         collector = new FeeCollector(caller, router, feeRecipient, address(mockFeeToken));
+    }
+
+    function testSwapBalanceApproves() public {
+        MockToken tokenToApprove1 = new MockToken();
+        MockToken tokenToApprove2 = new MockToken();
+        ERC20[] memory tokensToApprove = new ERC20[](2);
+        tokensToApprove[0] = tokenToApprove1;
+        tokensToApprove[1] = tokenToApprove2;
+        assertEq(tokenToApprove1.allowance(address(collector), router), 0);
+        assertEq(tokenToApprove2.allowance(address(collector), router), 0);
+        vm.prank(caller);
+        collector.swapBalance(tokensToApprove, abi.encodeWithSelector(0x12341234));
+        assertEq(tokenToApprove1.allowance(address(collector), router), type(uint256).max);
+        assertEq(tokenToApprove2.allowance(address(collector), router), type(uint256).max);
     }
 
     function testWithdrawFeeToken() public {

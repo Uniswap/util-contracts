@@ -22,16 +22,14 @@ contract FeeCollector is Owned, IFeeCollector {
         feeToken = ERC20(_feeToken);
     }
 
-    function approveAndPermit(ERC20[] calldata tokensToApprove) external onlyOwner {
-        for (uint256 i = 0; i < tokensToApprove.length; i++) {
-            tokensToApprove[i].approve(address(universalRouter), type(uint256).max);
-            tokensToApprove[i].permit(address(this), address(universalRouter), type(uint256).max, type(uint256).max);
-        }
-    }
-
     /// @inheritdoc IFeeCollector
-    function swapBalance(bytes calldata universalRouterCalldata) external payable onlyOwner {
-        (bool success,) = universalRouter.call{value: msg.value}(universalRouterCalldata);
+    function swapBalance(ERC20[] calldata tokensToApprove, bytes calldata swapData) external payable onlyOwner {
+        for (uint256 i = 0; i < tokensToApprove.length; i++) {
+            tokensToApprove[i].safeApprove(address(permit2), type(uint256).max);
+            permit2.safeApprove(address(universalRouter), type(uint256).max);
+        }
+
+        (bool success,) = universalRouter.call{value: msg.value}(swapData);
         if (!success) revert InvalidUniversalRouterCalldata();
     }
 
