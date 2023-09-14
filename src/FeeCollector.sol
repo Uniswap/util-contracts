@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.19;
 
-import {Owned} from "solmate/src/auth/Owned.sol";
-import {ERC20} from "solmate/src/tokens/ERC20.sol";
-import {SafeTransferLib} from "solmate/src/utils/SafeTransferLib.sol";
-import {IUniversalRouter} from "universal-router/contracts/interfaces/IUniversalRouter.sol";
+import {Owned} from "solmate/auth/Owned.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
+import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
+import {IUniversalRouter} from "./external/IUniversalRouter.sol";
 import {IFeeCollector} from "./interfaces/IFeeCollector.sol";
 
+/// @notice The collector of protocol fees that will be used to swap and send to a fee recipient address.
 contract FeeCollector is Owned, IFeeCollector {
     using SafeTransferLib for ERC20;
 
-    IUniversalRouter immutable universalRouter;
-    address immutable usdcRecipient;
-    ERC20 immutable usdc;
+    IUniversalRouter private immutable universalRouter;
+    address private immutable feeRecipient;
+    ERC20 private immutable feeToken;
 
-    constructor(address _owner, IUniversalRouter _universalRouter, address _usdcRecipient, address _usdc)
-        Owned(_owner)
-    {
-        universalRouter = _universalRouter;
-        usdcRecipient = _usdcRecipient;
-        usdc = ERC20(_usdc);
+    constructor(address _owner, address _universalRouter, address _feeRecipient, address _feeToken) Owned(_owner) {
+        universalRouter = IUniversalRouter(_universalRouter);
+        feeRecipient = _feeRecipient;
+        feeToken = ERC20(_feeToken);
     }
 
+    /// @inheritdoc IFeeCollector
     function swapBalance(address[] calldata tokens, bytes calldata commands, bytes[] calldata inputs, uint48 deadline)
         external
         onlyOwner
@@ -37,10 +37,13 @@ contract FeeCollector is Owned, IFeeCollector {
         universalRouter.execute(commands, inputs, deadline);
     }
 
-    function withdrawUSDC() external onlyOwner {
-        uint256 balance = usdc.balanceOf(address(this));
+    /// @inheritdoc IFeeCollector
+    function withdrawFeeToken() external onlyOwner {
+        uint256 balance = feeToken.balanceOf(address(this));
         if (balance > 0) {
-            usdc.safeTransfer(usdcRecipient, balance);
+            feeToken.safeTransfer(feeRecipient, balance);
         }
     }
+
+    receive() external payable {}
 }

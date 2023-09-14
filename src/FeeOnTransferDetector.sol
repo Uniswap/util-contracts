@@ -2,7 +2,7 @@
 pragma solidity =0.8.19;
 pragma abicoder v2;
 
-import "solmate/src/tokens/ERC20.sol";
+import "solmate/tokens/ERC20.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./lib/UniswapV2Library.sol";
 
