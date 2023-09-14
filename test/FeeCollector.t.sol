@@ -16,6 +16,7 @@ contract FeeCollectorTest is Test {
     address caller;
     address feeRecipient;
     address router;
+    address permit2;
 
     MockToken mockFeeToken;
 
@@ -26,23 +27,10 @@ contract FeeCollectorTest is Test {
         feeRecipientPrivateKey = 0x12341235;
         feeRecipient = vm.addr(feeRecipientPrivateKey);
         router = 0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD;
+        permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
         mockFeeToken = new MockToken();
 
-        collector = new FeeCollector(caller, router, feeRecipient, address(mockFeeToken));
-    }
-
-    function testSwapBalanceApproves() public {
-        MockToken tokenToApprove1 = new MockToken();
-        MockToken tokenToApprove2 = new MockToken();
-        ERC20[] memory tokensToApprove = new ERC20[](2);
-        tokensToApprove[0] = tokenToApprove1;
-        tokensToApprove[1] = tokenToApprove2;
-        assertEq(tokenToApprove1.allowance(address(collector), router), 0);
-        assertEq(tokenToApprove2.allowance(address(collector), router), 0);
-        vm.prank(caller);
-        collector.swapBalance(tokensToApprove, abi.encodeWithSelector(0x12341234));
-        assertEq(tokenToApprove1.allowance(address(collector), router), type(uint256).max);
-        assertEq(tokenToApprove2.allowance(address(collector), router), type(uint256).max);
+        collector = new FeeCollector(caller, router, permit2, feeRecipient, address(mockFeeToken));
     }
 
     function testWithdrawFeeToken() public {
