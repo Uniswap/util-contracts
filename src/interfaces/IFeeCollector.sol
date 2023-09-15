@@ -5,11 +5,20 @@ import {ERC20} from "solmate/tokens/ERC20.sol";
 
 /// @notice The collector of protocol fees that will be used to swap and send to a fee recipient address.
 interface IFeeCollector {
+    /// @notice Swaps the contract balance.
+    /// @param swapData The bytes call data to be forwarded to UniversalRouter.
+    /// @param nativeValue The amount of native currency to send to UniversalRouter.
+    function swapBalance(bytes calldata swapData, uint256 nativeValue) external payable;
+
     /// @notice Approves tokens for swapping and then swaps the contract balance.
     /// @param tokensToApprove An array of ERC20 tokens to approve for spending.
     /// @param swapData The bytes call data to be forwarded to UniversalRouter.
-    function swapBalance(ERC20[] calldata tokensToApprove, bytes calldata swapData) external payable;
+    /// @param nativeValue The amount of native currency to send to UniversalRouter.
+    function swapBalance(ERC20[] calldata tokensToApprove, bytes calldata swapData, uint256 nativeValue)
+        external
+        payable;
 
     /// @notice Transfers the fee token balance from this contract to the fee recipient.
-    function withdrawFeeToken() external;
+    /// @param feeRecipient The address to send the fee token balance to.
+    function withdrawFeeToken(address feeRecipient) external;
 }
