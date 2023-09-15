@@ -30,7 +30,7 @@ contract FeeCollector is Owned, IFeeCollector {
 
     /// @inheritdoc IFeeCollector
     function swapBalance(bytes calldata swapData, uint256 nativeValue) external payable onlyOwner {
-        swapHelper(swapData, nativeValue);
+        _execute(swapData, nativeValue);
     }
 
     /// @inheritdoc IFeeCollector
@@ -48,13 +48,13 @@ contract FeeCollector is Owned, IFeeCollector {
             }
         }
 
-        swapHelper(swapData, nativeValue);
+        _execute(swapData, nativeValue);
     }
 
     /// @notice Helper function to call UniversalRouter.
     /// @param swapData The bytes call data to be forwarded to UniversalRouter.
     /// @param nativeValue The amount of native currency to send to UniversalRouter.
-    function swapHelper(bytes calldata swapData, uint256 nativeValue) internal {
+    function _execute(bytes calldata swapData, uint256 nativeValue) internal {
         (bool success,) = universalRouter.call{value: nativeValue}(swapData);
         if (!success) revert UniversalRouterCallFailed();
     }

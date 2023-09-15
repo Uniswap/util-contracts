@@ -139,4 +139,20 @@ contract FeeCollectorTest is Test {
         collector.withdrawFeeToken(feeRecipient);
         assertEq(mockFeeToken.balanceOf(address(collector)), 100 ether);
     }
+
+    function testTransferOwnership() public {
+        address newOwner = makeAddr("newOwner");
+        assertEq(collector.owner(), caller);
+        vm.prank(caller);
+        collector.transferOwnership(newOwner);
+        assertEq(collector.owner(), newOwner);
+    }
+
+    function testTransferOwnershipUnauthorized() public {
+        address newOwner = makeAddr("newOwner");
+        assertEq(collector.owner(), caller);
+        vm.expectRevert("UNAUTHORIZED");
+        collector.transferOwnership(newOwner);
+        assertEq(collector.owner(), caller);
+    }
 }
