@@ -7,6 +7,7 @@ import {ERC20} from "solmate/tokens/ERC20.sol";
 import {MockToken} from "../mock/MockToken.sol";
 import {FeeCollector} from "../../src/FeeCollector.sol";
 import {IFeeCollector} from "../../src/interfaces/IFeeCollector.sol";
+import {IPermit2} from "../../src/external/IPermit2.sol";
 
 contract FeeCollectorTest is Test {
     uint256 constant ONE = 10 ** 18;
@@ -25,6 +26,7 @@ contract FeeCollectorTest is Test {
     address feeRecipient;
 
     FeeCollector collector;
+    IPermit2 permit2;
 
     function setUp() public {
         callerPrivateKey = 0x12341234;
@@ -41,19 +43,25 @@ contract FeeCollectorTest is Test {
             FEE_COLLECTOR
         );
         collector = FeeCollector(FEE_COLLECTOR);
+        permit2 = IPermit2(PERMIT2);
 
-        assertEq(address(collector), FEE_COLLECTOR, "Reactor address does not match expected");
+        assertEq(address(collector), FEE_COLLECTOR, "FeeCollector address does not match expected");
 
         // Transfer 1000 DAI to collector
-        vm.startPrank(WHALE);
+        vm.prank(WHALE);
         DAI.transfer(FEE_COLLECTOR, 1000 * ONE);
-        vm.stopPrank();
     }
 
     function testSwapBalance() public {
+        // Check balances and allowances
         assertEq(DAI.balanceOf(FEE_COLLECTOR), 1000 * ONE);
         assertEq(USDC.balanceOf(address(feeRecipient)), 0);
         assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
+        assertEq(DAI.allowance(FEE_COLLECTOR, PERMIT2), 0);
+        (uint160 preSwapAllowance,,) = permit2.allowance(FEE_COLLECTOR, address(DAI), UNIVERSAL_ROUTER);
+        assertEq(preSwapAllowance, 0);
+
+        // Build params for swapBalance
         ERC20[] memory tokensToApprove = new ERC20[](1);
         tokensToApprove[0] = DAI;
         bytes memory DAI_USDC_UR_CALLDATA =
@@ -64,11 +72,15 @@ contract FeeCollectorTest is Test {
         collector.swapBalance(tokensToApprove, DAI_USDC_UR_CALLDATA);
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
         assertEq(collectorUSDCBalance, 99989240);
+        assertEq(DAI.allowance(FEE_COLLECTOR, PERMIT2), type(uint256).max);
+        (uint160 postSwapAllowance,,) = permit2.allowance(FEE_COLLECTOR, address(DAI), UNIVERSAL_ROUTER);
+        assertEq(postSwapAllowance, type(uint160).max);
 
         // Withdraw USDC to feeRecipient
         assertEq(USDC.balanceOf(address(feeRecipient)), 0);
         vm.prank(caller);
         collector.withdrawFeeToken();
         assertEq(USDC.balanceOf(address(feeRecipient)), collectorUSDCBalance);
+        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
     }
 }
