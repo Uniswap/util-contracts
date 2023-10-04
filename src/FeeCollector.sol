@@ -17,7 +17,7 @@ contract FeeCollector is Owned, IFeeCollector {
 
     ERC20 private immutable feeToken;
     IPermit2 private immutable permit2;
-    
+
     uint256 private constant MAX_APPROVAL_AMOUNT = type(uint256).max;
     uint160 private constant MAX_PERMIT2_APPROVAL_AMOUNT = type(uint160).max;
     uint48 private constant MAX_PERMIT2_DEADLINE = type(uint48).max;
@@ -34,7 +34,7 @@ contract FeeCollector is Owned, IFeeCollector {
     }
 
     /// @inheritdoc IFeeCollector
-    function swapBalance(ERC20[] calldata tokensToApprove, bytes calldata swapData, uint256 nativeValue)
+    function swapBalance(bytes calldata swapData, uint256 nativeValue, ERC20[] calldata tokensToApprove)
         external
         payable
         onlyOwner

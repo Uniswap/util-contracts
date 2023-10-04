@@ -14,7 +14,7 @@ interface IFeeCollector {
     /// @param tokensToApprove An array of ERC20 tokens to approve for spending.
     /// @param swapData The bytes call data to be forwarded to UniversalRouter.
     /// @param nativeValue The amount of native currency to send to UniversalRouter.
-    function swapBalance(ERC20[] calldata tokensToApprove, bytes calldata swapData, uint256 nativeValue)
+    function swapBalance(bytes calldata swapData, uint256 nativeValue, ERC20[] calldata tokensToApprove)
         external
         payable;
 
