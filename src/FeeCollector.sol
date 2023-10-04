@@ -29,14 +29,13 @@ contract FeeCollector is Owned, IFeeCollector {
     }
 
     /// @inheritdoc IFeeCollector
-    function swapBalance(bytes calldata swapData, uint256 nativeValue) external payable onlyOwner {
+    function swapBalance(bytes calldata swapData, uint256 nativeValue) external onlyOwner {
         _execute(swapData, nativeValue);
     }
 
     /// @inheritdoc IFeeCollector
     function swapBalance(bytes calldata swapData, uint256 nativeValue, ERC20[] calldata tokensToApprove)
         external
-        payable
         onlyOwner
     {
         unchecked {
