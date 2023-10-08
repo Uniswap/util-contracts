@@ -20,5 +20,5 @@ interface IFeeCollector {
 
     /// @notice Transfers the fee token balance from this contract to the fee recipient.
     /// @param feeRecipient The address to send the fee token balance to.
-    function withdrawFeeToken(address feeRecipient) external;
+    function withdrawFeeToken(address feeRecipient, uint256 amount) external;
 }

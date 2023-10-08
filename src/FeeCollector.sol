@@ -60,7 +60,7 @@ contract FeeCollector is Owned, IFeeCollector {
     }
 
     /// @inheritdoc IFeeCollector
-    function withdrawFeeToken(address feeRecipient) external onlyOwner {
+    function withdrawFeeToken(address feeRecipient, uint256 amount) external onlyOwner {
         uint256 balance = feeToken.balanceOf(address(this));
         if (balance > 0) {
             feeToken.safeTransfer(feeRecipient, balance);
