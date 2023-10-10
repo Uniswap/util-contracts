@@ -18,9 +18,9 @@ contract FeeCollector is Owned, IFeeCollector {
     ERC20 private immutable feeToken;
     IPermit2 private immutable permit2;
 
-    uint256 private immutable MAX_APPROVAL_AMOUNT = type(uint256).max;
-    uint160 private immutable MAX_PERMIT2_APPROVAL_AMOUNT = type(uint160).max;
-    uint48 private immutable MAX_PERMIT2_DEADLINE = type(uint48).max;
+    uint256 private constant MAX_APPROVAL_AMOUNT = type(uint256).max;
+    uint160 private constant MAX_PERMIT2_APPROVAL_AMOUNT = type(uint160).max;
+    uint48 private constant MAX_PERMIT2_DEADLINE = type(uint48).max;
 
     constructor(address _owner, address _universalRouter, address _permit2, address _feeToken) Owned(_owner) {
         universalRouter = _universalRouter;
@@ -29,14 +29,13 @@ contract FeeCollector is Owned, IFeeCollector {
     }
 
     /// @inheritdoc IFeeCollector
-    function swapBalance(bytes calldata swapData, uint256 nativeValue) external payable onlyOwner {
+    function swapBalance(bytes calldata swapData, uint256 nativeValue) external onlyOwner {
         _execute(swapData, nativeValue);
     }
 
     /// @inheritdoc IFeeCollector
-    function swapBalance(ERC20[] calldata tokensToApprove, bytes calldata swapData, uint256 nativeValue)
+    function swapBalance(bytes calldata swapData, uint256 nativeValue, ERC20[] calldata tokensToApprove)
         external
-        payable
         onlyOwner
     {
         unchecked {

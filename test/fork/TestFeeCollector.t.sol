@@ -93,7 +93,7 @@ contract FeeCollectorTest is Test {
 
         // Swap collector DAI balance to USDC
         vm.prank(caller);
-        collector.swapBalance(tokensToApprove, DAI_USDC_UR_CALLDATA, 0);
+        collector.swapBalance(DAI_USDC_UR_CALLDATA, 0, tokensToApprove);
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
         assertEq(collectorUSDCBalance, 99989240);
         assertEq(DAI.allowance(FEE_COLLECTOR, PERMIT2), type(uint256).max);
@@ -150,7 +150,7 @@ contract FeeCollectorTest is Test {
 
         // Swap native and DAI to USDC
         vm.prank(caller);
-        collector.swapBalance(tokensToApprove, ETH_AND_DAI_TO_USDC_UR_CALLDATA, 1000 ether);
+        collector.swapBalance(ETH_AND_DAI_TO_USDC_UR_CALLDATA, 1000 ether, tokensToApprove);
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
         assertEq(DAI.balanceOf(FEE_COLLECTOR), 0);
         assertEq(FEE_COLLECTOR.balance, 0);
