@@ -124,7 +124,7 @@ contract FeeCollectorTest is Test {
         mockFeeToken.mint(address(collector), 100 ether);
         assertEq(mockFeeToken.balanceOf(address(collector)), 100 ether);
         vm.prank(caller);
-        collector.withdrawFeeToken(feeRecipient);
+        collector.withdrawFeeToken(feeRecipient, 100 ether);
         assertEq(mockFeeToken.balanceOf(address(collector)), 0);
         assertEq(mockFeeToken.balanceOf(address(feeRecipient)), 100 ether);
     }
@@ -136,7 +136,7 @@ contract FeeCollectorTest is Test {
         assertEq(mockFeeToken.balanceOf(address(collector)), 100 ether);
         vm.expectRevert("UNAUTHORIZED");
         vm.prank(address(0xbeef));
-        collector.withdrawFeeToken(feeRecipient);
+        collector.withdrawFeeToken(feeRecipient, 100 ether);
         assertEq(mockFeeToken.balanceOf(address(collector)), 100 ether);
     }
 
