@@ -68,7 +68,7 @@ contract FeeCollectorTest is Test {
         // Withdraw USDC to feeRecipient
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance);
         vm.prank(caller);
-        collector.withdrawFeeToken(feeRecipient);
+        collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
         assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
     }
@@ -103,7 +103,7 @@ contract FeeCollectorTest is Test {
         // Withdraw USDC to feeRecipient
         assertEq(USDC.balanceOf(address(feeRecipient)), 0);
         vm.prank(caller);
-        collector.withdrawFeeToken(feeRecipient);
+        collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), collectorUSDCBalance);
         assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
     }
@@ -127,7 +127,7 @@ contract FeeCollectorTest is Test {
         // Withdraw USDC to feeRecipient
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance);
         vm.prank(caller);
-        collector.withdrawFeeToken(feeRecipient);
+        collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
         assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
     }
@@ -159,7 +159,7 @@ contract FeeCollectorTest is Test {
         // Withdraw USDC to feeRecipient
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance);
         vm.prank(caller);
-        collector.withdrawFeeToken(feeRecipient);
+        collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
         assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
     }
