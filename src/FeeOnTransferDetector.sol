@@ -3,6 +3,7 @@ pragma solidity =0.8.19;
 pragma abicoder v2;
 
 import "solmate/tokens/ERC20.sol";
+import "solmate/utils/SafeTransferLib.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./lib/UniswapV2Library.sol";
 
@@ -13,6 +14,8 @@ struct TokenFees {
 
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
 contract FeeOnTransferDetector {
+    using SafeTransferLib for ERC20;
+
     error SameToken();
     error PairLookupFailed();
 
@@ -98,7 +101,7 @@ contract FeeOnTransferDetector {
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         uint256 sellFeeBps;
-        try tokenBorrowed.transfer(address(pair), amountBorrowed) {
+        try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
             uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
             sellFeeBps = sellFee * BPS / amountBorrowed;
         } catch (bytes memory) {
@@ -111,5 +114,11 @@ contract FeeOnTransferDetector {
         assembly {
             revert(add(32, fees), mload(fees))
         }
+    }
+
+    // external wrapper around safeTransfer
+    // because try/catch does not handle calling libraries
+    function callTransfer(ERC20 token, address to, uint256 amount) external {
+        token.safeTransfer(to, amount);
     }
 }
