@@ -73,4 +73,14 @@ contract FotDetectionTest is Test {
         assertEq(fees.buyFeeBps, expectedBuyFeeBps);
         assertEq(fees.sellFeeBps, expectedSellFeeBps);
     }
+
+    function testUSDT() public {
+        address token = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+        uint256 expectedBuyFeeBps = 0;
+        uint256 expectedSellFeeBps = 0;
+
+        TokenFees memory fees = detector.validate(token, WETH, 10000);
+        assertEq(fees.buyFeeBps, expectedBuyFeeBps);
+        assertEq(fees.sellFeeBps, expectedSellFeeBps);
+    }
 }
