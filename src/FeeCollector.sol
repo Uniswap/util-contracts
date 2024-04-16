@@ -12,13 +12,10 @@ contract FeeCollector is Owned, IFeeCollector {
 
     error CallFailed();
 
-    struct Call {
-        address to;
-        bytes data;
-    }
-
     address public feeRecipient;
-    uin256 public feeTokenAmount;
+    /// @notice the amount of fee token that must be paid per token
+    uint256 public feeTokenAmount;
+    /// @notice the token to receive fees in
     ERC20 private immutable feeToken;
 
     constructor(address _owner, address _feeToken, uint256 _feeTokenAmount) Owned(_owner) {
@@ -26,19 +23,20 @@ contract FeeCollector is Owned, IFeeCollector {
         feeTokenAmount = _feeTokenAmount;
     }
 
-    /// @notice allow anyone to make any arbitrary calls from this address
-    /// @dev as long as they pay `feeTokenAmount` to the `feeRecipient`
+    /// @notice allow anyone to take the full balance of any arbitrary tokens
+    /// @dev as long as they pay `feeTokenAmount` per token taken to the `feeRecipient`
     ///     this creates a competitive auction as the balances of this contract increase
     ///     to find the optimal path for the swap
-    function swapBalances(Call[] calldata calls) external {
-        for (uint256 i = 0; i < calls.length; i++) {
-            (bool success, ) = calls[i].to.call(calls[i].data);
-            if (!success) {
-                revert CallFailed();
-            }
+    function swapBalances(ERC20[] memory tokens, bytes calldata call) external {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            tokens[i].safeTransferFrom(msg.sender, address(this), tokens[i].balanceOf(address(this)));
+        }
+        (bool success,) = msg.sender.call(call);
+        if (!success) {
+            revert CallFailed();
         }
 
-        feeToken.safeTransferFrom(msg.sender, feeRecipient, feeTokenAmount);
+        feeToken.safeTransferFrom(msg.sender, feeRecipient, feeTokenAmount * tokens.length);
     }
 
     function setFeeRecipient(address _feeRecipient) external onlyOwner {
