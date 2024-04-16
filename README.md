@@ -7,6 +7,17 @@ A lens contract to fetch Fee-on-transfer token buy and sell fees
 ## FeeCollector
 The collector of protocol fees that will be swapped and sent to Labs.
 
+| Chain Id | Deployment Address                         | V2 Factory                                 |
+|----------|--------------------------------------------|--------------------------------------------|
+| 1        | 0x19C97dc2a25845C7f9d1d519c8C2d4809c58b43f | 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f |
+| 10       | 0xa7c17505B43955A474fb6AFE61E093907a7567c9 | 0x0c3c1c532F1e39EdF36BE9Fe0bE1410313E074Bf |
+| 56       | 0x331f6D0AAB4A1F039f0d75A613a7F1593DbDE1BB | 0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6 |
+| 137      | 0x92bCCCb6c8c199AAcA38408621E38Ab6dBfA00B5 | 0x9e5A52f57b3038F1B8EeE45F28b3C1967e22799C |
+| 8453     | 0x331f6D0AAB4A1F039f0d75A613a7F1593DbDE1BB | 0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6 |
+| 42161    | 0x64CF365CC5CCf5E64380bc05Acd5df7D0618c118 | 0xf1D7CC64Fb4452F05c498126312eBE29f30Fbcf9 |
+| 42220    | 0x3dfF0145E68a5880EAbE8F56b6Bc30C4AdCF3413 | 0x79a530c8e2fA8748B7B40dd3629C0520c2cCf03f |
+| 43114    | 0xBF2B9F6A6eCc4541b31ab2dCF8156D33644Ca3F3 | 0x5C346464d33F90bABaf70dB6388507CC889C1070 |
+
 ### Deployment Addresses
 | Chain Id | Deployment Address                             | UniversalRouter Address                      | Permit2 Address                               | Fee Token Address                               |
 |----------|------------------------------------------------|----------------------------------------------|-----------------------------------------------|-------------------------------------------------|
