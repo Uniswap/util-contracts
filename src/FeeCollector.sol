@@ -48,10 +48,6 @@ contract FeeCollector is Owned, IFeeCollector {
         feeRecipient = _feeRecipient;
     }
 
-    function setFeeToken(uint256 _feeTokenAmount) external onlyOwner {
-        feeTokenAmount = _feeTokenAmount;
-    }
-
     function setFeeTokenAmount(uint256 _feeTokenAmount) external onlyOwner {
         feeTokenAmount = _feeTokenAmount;
     }
