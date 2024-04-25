@@ -29,7 +29,7 @@ contract FeeCollector is Owned, IFeeCollector {
     ///     to find the optimal path for the swap
     function swapBalances(ERC20[] memory tokens, bytes calldata call) external {
         for (uint256 i = 0; i < tokens.length; i++) {
-            tokens[i].safeTransferFrom(msg.sender, address(this), tokens[i].balanceOf(address(this)));
+            tokens[i].safeTransfer(msg.sender, tokens[i].balanceOf(address(this)));
         }
         (bool success,) = msg.sender.call(call);
         if (!success) {
