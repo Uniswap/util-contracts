@@ -39,6 +39,11 @@ contract FeeCollector is Owned, IFeeCollector {
         feeToken.safeTransferFrom(msg.sender, feeRecipient, feeTokenAmount * tokens.length);
     }
 
+    /// @inheritdoc IFeeCollector
+    function withdrawToken(ERC20 token, address to, uint256 amount) external onlyOwner {
+        token.safeTransfer(to, amount);
+    }
+
     function setFeeRecipient(address _feeRecipient) external onlyOwner {
         feeRecipient = _feeRecipient;
     }
