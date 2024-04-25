@@ -16,9 +16,10 @@ contract FeeCollector is Owned, IFeeCollector {
     /// @notice the amount of fee token that must be paid per token
     uint256 public feeTokenAmount;
     /// @notice the token to receive fees in
-    ERC20 private immutable feeToken;
+    ERC20 public immutable feeToken;
 
-    constructor(address _owner, address _feeToken, uint256 _feeTokenAmount) Owned(_owner) {
+    constructor(address _owner, address _feeRecipient, address _feeToken, uint256 _feeTokenAmount) Owned(_owner) {
+        feeRecipient = _feeRecipient;
         feeToken = ERC20(_feeToken);
         feeTokenAmount = _feeTokenAmount;
     }
