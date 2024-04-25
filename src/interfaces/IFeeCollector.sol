@@ -5,7 +5,7 @@ import {ERC20} from "solmate/tokens/ERC20.sol";
 
 /// @notice The collector of protocol fees that will be used to swap and send to a fee recipient address.
 interface IFeeCollector {
-    /// @notice 
+    /// @notice
     function swapBalances(ERC20[] memory tokens, bytes calldata call) external;
 
     /// @notice Transfers amount of token to a caller specified recipient.

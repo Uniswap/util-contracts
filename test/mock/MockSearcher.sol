@@ -18,7 +18,7 @@ contract MockSearcher {
     }
 
     fallback() external {
-        if(msg.sender != address(feeCollector)) {
+        if (msg.sender != address(feeCollector)) {
             revert("Unauthorized");
         }
     }
