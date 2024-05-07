@@ -171,14 +171,17 @@ contract FeeCollectorTest is Test {
         permit2.approve(address(DAI), UNIVERSAL_ROUTER, type(uint160).max, type(uint48).max);
         vm.stopPrank();
 
+        ERC20[] memory tokensToRevoke = new ERC20[](1);
+        tokensToRevoke[0] = DAI;
+
         // revoke token approval
         vm.prank(caller);
-        collector.revokeTokenApproval(DAI);
+        collector.revokeTokenApproval(tokensToRevoke);
         assertEq(DAI.allowance(address(collector), PERMIT2), 0);
 
         // revoke permit2 approval
         vm.prank(caller);
-        collector.revokePermit2Approval(DAI, UNIVERSAL_ROUTER);
+        collector.revokePermit2Approval(tokensToRevoke, UNIVERSAL_ROUTER);
         (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
 
@@ -226,8 +229,11 @@ contract FeeCollectorTest is Test {
         (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 100 ether);
 
+        ERC20[] memory tokensToRevoke = new ERC20[](1);
+        tokensToRevoke[0] = DAI;
+
         vm.prank(caller);
-        collector.revokePermit2Approval(DAI, UNIVERSAL_ROUTER);
+        collector.revokePermit2Approval(tokensToRevoke, UNIVERSAL_ROUTER);
         (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
     }
