@@ -12,7 +12,7 @@ import {FeeCollector} from "../src/FeeCollector.sol";
 contract FeeCollectorTest is Test {
     FeeCollector public collector;
 
-    address caller;
+    address owner;
     address feeRecipient;
     address permit2;
 
@@ -22,8 +22,8 @@ contract FeeCollectorTest is Test {
     MockUniversalRouter router;
 
     function setUp() public {
-        // Mock caller and fee recipient
-        caller = makeAddr("caller");
+        // Mock owner and fee recipient
+        owner = makeAddr("owner");
         feeRecipient = makeAddr("feeRecipient");
         permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
         mockFeeToken = new MockToken();
@@ -31,7 +31,7 @@ contract FeeCollectorTest is Test {
         tokenOut = new MockToken();
         router = new MockUniversalRouter();
 
-        collector = new FeeCollector(caller, address(router), permit2, address(mockFeeToken));
+        collector = new FeeCollector(owner, address(router), permit2, address(mockFeeToken));
     }
 
     function testSwapBalance() public {
@@ -46,7 +46,7 @@ contract FeeCollectorTest is Test {
 
         vm.prank(address(collector));
         tokenIn.approve(address(router), 100 ether);
-        vm.prank(caller);
+        vm.prank(owner);
         collector.swapBalance(swapData, 0);
 
         assertEq(tokenIn.balanceOf(address(collector)), 0 ether);
@@ -65,7 +65,7 @@ contract FeeCollectorTest is Test {
             IMockUniversalRouter.execute.selector, abi.encode(address(0), address(tokenOut), 100 ether, 100 ether)
         );
 
-        vm.prank(caller);
+        vm.prank(owner);
         collector.swapBalance(swapData, 100 ether);
 
         assertEq(address(collector).balance, 0 ether);
@@ -87,7 +87,7 @@ contract FeeCollectorTest is Test {
         vm.prank(address(collector));
         tokenIn.approve(address(router), 100 ether);
         vm.expectRevert(FeeCollector.UniversalRouterCallFailed.selector);
-        vm.prank(caller);
+        vm.prank(owner);
         collector.swapBalance(badSwapCallData, 0);
 
         assertEq(tokenIn.balanceOf(address(collector)), 100 ether);
@@ -123,7 +123,7 @@ contract FeeCollectorTest is Test {
         assertEq(mockFeeToken.balanceOf(address(feeRecipient)), 0);
         mockFeeToken.mint(address(collector), 100 ether);
         assertEq(mockFeeToken.balanceOf(address(collector)), 100 ether);
-        vm.prank(caller);
+        vm.prank(owner);
         collector.withdrawFeeToken(feeRecipient, 100 ether);
         assertEq(mockFeeToken.balanceOf(address(collector)), 0);
         assertEq(mockFeeToken.balanceOf(address(feeRecipient)), 100 ether);
@@ -142,17 +142,17 @@ contract FeeCollectorTest is Test {
 
     function testTransferOwnership() public {
         address newOwner = makeAddr("newOwner");
-        assertEq(collector.owner(), caller);
-        vm.prank(caller);
+        assertEq(collector.owner(), owner);
+        vm.prank(owner);
         collector.transferOwnership(newOwner);
         assertEq(collector.owner(), newOwner);
     }
 
     function testTransferOwnershipUnauthorized() public {
         address newOwner = makeAddr("newOwner");
-        assertEq(collector.owner(), caller);
+        assertEq(collector.owner(), owner);
         vm.expectRevert("UNAUTHORIZED");
         collector.transferOwnership(newOwner);
-        assertEq(collector.owner(), caller);
+        assertEq(collector.owner(), owner);
     }
 }
