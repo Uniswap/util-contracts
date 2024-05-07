@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {DeployFeeCollector, DeployParameters} from "../DeployFeeCollector.s.sol";
 
-contract DeployBase is DeployFeeCollector {
+contract DeployAvalanche is DeployFeeCollector {
     function setUp() public override {
         params = DeployParameters({
             owner: 0xbE84D31B2eE049DCb1d8E7c798511632b44d1b55,
