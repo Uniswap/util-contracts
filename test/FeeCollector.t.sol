@@ -8,13 +8,14 @@ import {MockToken} from "./mock/MockToken.sol";
 import {MockUniversalRouter} from "./mock/MockUniversalRouter.sol";
 import {IMockUniversalRouter} from "./mock/MockUniversalRouter.sol";
 import {FeeCollector} from "../src/FeeCollector.sol";
+import {IPermit2} from "../src/external/IPermit2.sol";
 
 contract FeeCollectorTest is Test {
     FeeCollector public collector;
 
     address caller;
     address feeRecipient;
-    address permit2;
+    IPermit2 permit2;
 
     MockToken mockFeeToken;
     MockToken tokenIn;
@@ -25,13 +26,13 @@ contract FeeCollectorTest is Test {
         // Mock caller and fee recipient
         caller = makeAddr("caller");
         feeRecipient = makeAddr("feeRecipient");
-        permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+        permit2 = IPermit2(0x000000000022D473030F116dDEE9F6B43aC78BA3);
         mockFeeToken = new MockToken();
         tokenIn = new MockToken();
         tokenOut = new MockToken();
         router = new MockUniversalRouter();
 
-        collector = new FeeCollector(caller, address(router), permit2, address(mockFeeToken));
+        collector = new FeeCollector(caller, address(router), address(permit2), address(mockFeeToken));
     }
 
     function testSwapBalance() public {
@@ -154,5 +155,18 @@ contract FeeCollectorTest is Test {
         vm.expectRevert("UNAUTHORIZED");
         collector.transferOwnership(newOwner);
         assertEq(collector.owner(), caller);
+    }
+
+    function testRevokeTokenApproval() public {
+        assertEq(tokenIn.allowance(address(collector), address(permit2)), 0);
+
+        vm.prank(address(collector));
+        tokenIn.approve(address(permit2), 100 ether);
+        assertEq(tokenIn.allowance(address(collector), address(permit2)), 100 ether);
+
+        vm.prank(caller);
+        collector.revokeTokenApproval(tokenIn);
+
+        assertEq(tokenIn.allowance(address(collector), address(permit2)), 0);
     }
 }

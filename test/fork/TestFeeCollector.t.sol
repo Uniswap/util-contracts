@@ -163,4 +163,19 @@ contract FeeCollectorTest is Test {
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
         assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
     }
+
+    function testRevokePermit2Approval() public {
+        (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 0); 
+
+        vm.prank(address(collector));
+        permit2.approve(address(DAI), UNIVERSAL_ROUTER, 100 ether, 0);
+        (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 100 ether);
+
+        vm.prank(caller);
+        collector.revokePermit2Approval(DAI, UNIVERSAL_ROUTER);
+        (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 0);
+    }
 }
