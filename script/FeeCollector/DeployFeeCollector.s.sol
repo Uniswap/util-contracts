@@ -23,7 +23,7 @@ abstract contract DeployFeeCollector is Script {
         require(params.universalRouter != address(0), "universalRouter not set");
         require(params.permit2 != address(0), "permit2 not set");
         require(params.feeToken != address(0), "feeToken not set");
-        
+
         vm.startBroadcast();
         collector = new FeeCollector{salt: 0x00}(params.owner, params.universalRouter, params.permit2, params.feeToken);
         vm.stopBroadcast();
@@ -33,9 +33,9 @@ abstract contract DeployFeeCollector is Script {
     }
 
     function logParams() internal view {
-        console2.log('permit2:', params.permit2);
-        console2.log('feeToken:', params.feeToken);
-        console2.log('universalRouter:', params.universalRouter);
-        console2.log('owner:', params.owner);
+        console2.log("permit2:", params.permit2);
+        console2.log("feeToken:", params.feeToken);
+        console2.log("universalRouter:", params.universalRouter);
+        console2.log("owner:", params.owner);
     }
 }
