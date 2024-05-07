@@ -18,13 +18,14 @@ abstract contract DeployFeeCollector is Script {
     function setUp() public virtual {}
 
     function run() public returns (FeeCollector collector) {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
         // require all parameters to be set
         require(params.owner != address(0), "owner not set");
         require(params.universalRouter != address(0), "universalRouter not set");
         require(params.permit2 != address(0), "permit2 not set");
         require(params.feeToken != address(0), "feeToken not set");
 
-        vm.startBroadcast();
+        vm.startBroadcast(privateKey);
         collector = new FeeCollector{salt: 0x00}(params.owner, params.universalRouter, params.permit2, params.feeToken);
         vm.stopBroadcast();
 
