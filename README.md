@@ -17,7 +17,7 @@ A lens contract to fetch Fee-on-transfer token buy and sell fees
 | 43114    | 0xBF2B9F6A6eCc4541b31ab2dCF8156D33644Ca3F3 | 0x5C346464d33F90bABaf70dB6388507CC889C1070 |
 
 ## FeeCollector
-The collector of protocol fees that will be swapped and sent to Labs.
+The collector of interface fees that will be swapped and sent to Uniswap Labs.
 
 ### Deployment Addresses
 | Chain Id | Deployment Address                             | UniversalRouter Address                      | Permit2 Address                               | Fee Token Address                               |

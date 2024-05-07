@@ -15,6 +15,9 @@ struct DeployParameters {
 abstract contract DeployFeeCollector is Script {
     DeployParameters internal params;
 
+    address public constant OWNER = 0xbE84D31B2eE049DCb1d8E7c798511632b44d1b55;
+    address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+
     function setUp() public virtual {}
 
     function run() public returns (FeeCollector collector) {

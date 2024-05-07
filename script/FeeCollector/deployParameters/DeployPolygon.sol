@@ -6,9 +6,9 @@ import {DeployFeeCollector, DeployParameters} from "../DeployFeeCollector.s.sol"
 contract DeployPolygon is DeployFeeCollector {
     function setUp() public override {
         params = DeployParameters({
-            owner: 0xbE84D31B2eE049DCb1d8E7c798511632b44d1b55,
+            owner: OWNER,
             universalRouter: 0xec7BE89e9d109e7e3Fec59c222CF297125FEFda2,
-            permit2: 0x000000000022D473030F116dDEE9F6B43aC78BA3,
+            permit2: PERMIT2,
             feeToken: 0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359
         });
     }
