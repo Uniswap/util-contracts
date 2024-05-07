@@ -13,7 +13,7 @@ contract FeeCollector is Owned, IFeeCollector {
 
     error UniversalRouterCallFailed();
 
-    event UniversalRouterChanged(address universalRouter);
+    event UniversalRouterChanged(address oldUniversalRouter, address newUniversalRouter);
 
     address public universalRouter;
 
@@ -67,8 +67,8 @@ contract FeeCollector is Owned, IFeeCollector {
 
     /// @inheritdoc IFeeCollector
     function setUniversalRouter(address _universalRouter) external onlyOwner {
+        emit UniversalRouterChanged(universalRouter, _universalRouter);
         universalRouter = _universalRouter;
-        emit UniversalRouterChanged(_universalRouter);
     }
 
     receive() external payable {}
