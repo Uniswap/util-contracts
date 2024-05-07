@@ -166,7 +166,7 @@ contract FeeCollectorTest is Test {
 
     function testRevokePermit2Approval() public {
         (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
-        assertEq(allowance, 0); 
+        assertEq(allowance, 0);
 
         vm.prank(address(collector));
         permit2.approve(address(DAI), UNIVERSAL_ROUTER, 100 ether, 0);
