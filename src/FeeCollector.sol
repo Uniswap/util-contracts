@@ -12,6 +12,7 @@ contract FeeCollector is Owned, IFeeCollector {
     using SafeTransferLib for ERC20;
 
     error UniversalRouterCallFailed();
+
     event UniversalRouterChanged(address universalRouter);
 
     address public universalRouter;
