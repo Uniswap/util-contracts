@@ -13,14 +13,14 @@ contract FeeCollector is Owned, IFeeCollector {
 
     error UniversalRouterCallFailed();
 
-    address private immutable universalRouter;
+    address public immutable universalRouter;
 
-    ERC20 private immutable feeToken;
-    IPermit2 private immutable permit2;
+    ERC20 public immutable feeToken;
+    IPermit2 public immutable permit2;
 
-    uint256 private constant MAX_APPROVAL_AMOUNT = type(uint256).max;
-    uint160 private constant MAX_PERMIT2_APPROVAL_AMOUNT = type(uint160).max;
-    uint48 private constant MAX_PERMIT2_DEADLINE = type(uint48).max;
+    uint256 public constant MAX_APPROVAL_AMOUNT = type(uint256).max;
+    uint160 public constant MAX_PERMIT2_APPROVAL_AMOUNT = type(uint160).max;
+    uint48 public constant MAX_PERMIT2_DEADLINE = type(uint48).max;
 
     constructor(address _owner, address _universalRouter, address _permit2, address _feeToken) Owned(_owner) {
         universalRouter = _universalRouter;
