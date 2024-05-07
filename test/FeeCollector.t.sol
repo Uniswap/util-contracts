@@ -155,4 +155,18 @@ contract FeeCollectorTest is Test {
         collector.transferOwnership(newOwner);
         assertEq(collector.owner(), caller);
     }
+
+    function testSetUniversalRouter() public {
+        assertEq(collector.universalRouter(), address(router));
+        address newUniversalRouter = makeAddr("newUniversalRouter");
+        vm.prank(caller);
+        collector.setUniversalRouter(newUniversalRouter);
+        assertEq(collector.universalRouter(), newUniversalRouter);
+    }
+
+    function testSetUniversalRouterNotOwner() public {
+        address newUniversalRouter = makeAddr("newUniversalRouter");
+        vm.expectRevert("UNAUTHORIZED");
+        collector.setUniversalRouter(newUniversalRouter);
+    }
 }

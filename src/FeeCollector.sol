@@ -12,8 +12,9 @@ contract FeeCollector is Owned, IFeeCollector {
     using SafeTransferLib for ERC20;
 
     error UniversalRouterCallFailed();
+    event UniversalRouterChanged(address universalRouter);
 
-    address private immutable universalRouter;
+    address public universalRouter;
 
     ERC20 private immutable feeToken;
     IPermit2 private immutable permit2;
@@ -61,6 +62,12 @@ contract FeeCollector is Owned, IFeeCollector {
     /// @inheritdoc IFeeCollector
     function withdrawFeeToken(address feeRecipient, uint256 amount) external onlyOwner {
         feeToken.safeTransfer(feeRecipient, amount);
+    }
+
+    /// @inheritdoc IFeeCollector
+    function setUniversalRouter(address _universalRouter) external onlyOwner {
+        universalRouter = _universalRouter;
+        emit UniversalRouterChanged(_universalRouter);
     }
 
     receive() external payable {}

@@ -20,4 +20,8 @@ interface IFeeCollector {
     /// @param feeRecipient The address to send the fee token balance to.
     /// @param amount The amount to withdraw.
     function withdrawFeeToken(address feeRecipient, uint256 amount) external;
+
+    /// @notice Sets the address of the UniversalRouter contract.
+    /// @param _universalRouter The address of the UniversalRouter contract.
+    function setUniversalRouter(address _universalRouter) external;
 }
