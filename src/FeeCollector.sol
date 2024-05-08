@@ -5,15 +5,12 @@ import {Owned} from "solmate/auth/Owned.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {IFeeCollector} from "./interfaces/IFeeCollector.sol";
+import {FeeCollectorEvents} from "./interfaces/FeeCollectorEvents.sol";
 import {IPermit2} from "./external/IPermit2.sol";
 
 /// @notice The collector of protocol fees that will be used to swap and send to a fee recipient address.
-contract FeeCollector is Owned, IFeeCollector {
+contract FeeCollector is Owned, IFeeCollector, FeeCollectorEvents {
     using SafeTransferLib for ERC20;
-
-    error UniversalRouterCallFailed();
-
-    event UniversalRouterChanged(address oldUniversalRouter, address newUniversalRouter);
 
     address public universalRouter;
 
