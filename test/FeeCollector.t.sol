@@ -90,7 +90,7 @@ contract FeeCollectorTest is Test {
         vm.prank(address(collector));
         tokenIn.approve(address(router), 100 ether);
         vm.expectRevert(IFeeCollector.UniversalRouterCallFailed.selector);
-        vm.prank(caller);
+        vm.prank(owner);
         collector.swapBalance(badSwapCallData, 0);
 
         assertEq(tokenIn.balanceOf(address(collector)), 100 ether);
@@ -163,7 +163,7 @@ contract FeeCollectorTest is Test {
         assertEq(collector.universalRouter(), address(router));
         address newUniversalRouter = makeAddr("newUniversalRouter");
 
-        vm.prank(caller);
+        vm.prank(owner);
         vm.expectEmit(false, false, false, true, address(collector));
         emit UniversalRouterChanged(address(router), newUniversalRouter);
         collector.setUniversalRouter(newUniversalRouter);
@@ -174,7 +174,7 @@ contract FeeCollectorTest is Test {
         assertEq(collector.universalRouter(), address(router));
         MockUniversalRouter newRouter = new MockUniversalRouter();
 
-        vm.prank(caller);
+        vm.prank(owner);
         vm.expectEmit(false, false, false, true, address(collector));
         emit UniversalRouterChanged(address(router), address(newRouter));
         collector.setUniversalRouter(address(newRouter));
@@ -189,7 +189,7 @@ contract FeeCollectorTest is Test {
 
         vm.prank(address(collector));
         tokenIn.approve(address(newRouter), 100 ether);
-        vm.prank(caller);
+        vm.prank(owner);
         collector.swapBalance(swapData, 0);
 
         assertEq(tokenIn.balanceOf(address(collector)), 0 ether);
