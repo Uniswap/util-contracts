@@ -21,8 +21,6 @@ contract FeeCollectorTest is Test {
     MockToken tokenOut;
     MockUniversalRouter router;
 
-    event UniversalRouterChanged(address oldUniversalRouter, address newUniversalRouter);
-
     function setUp() public {
         // Mock caller and fee recipient
         caller = makeAddr("caller");
@@ -156,50 +154,5 @@ contract FeeCollectorTest is Test {
         vm.expectRevert("UNAUTHORIZED");
         collector.transferOwnership(newOwner);
         assertEq(collector.owner(), caller);
-    }
-
-    function testSetUniversalRouter() public {
-        assertEq(collector.universalRouter(), address(router));
-        address newUniversalRouter = makeAddr("newUniversalRouter");
-
-        vm.prank(caller);
-        vm.expectEmit(false, false, false, true, address(collector));
-        emit UniversalRouterChanged(address(router), newUniversalRouter);
-        collector.setUniversalRouter(newUniversalRouter);
-        assertEq(collector.universalRouter(), newUniversalRouter);
-    }
-
-    function testSetUniversalRouterAndSwapBalance() public {
-        assertEq(collector.universalRouter(), address(router));
-        MockUniversalRouter newRouter = new MockUniversalRouter();
-
-        vm.prank(caller);
-        vm.expectEmit(false, false, false, true, address(collector));
-        emit UniversalRouterChanged(address(router), address(newRouter));
-        collector.setUniversalRouter(address(newRouter));
-        assertEq(collector.universalRouter(), address(newRouter));
-
-        tokenIn.mint(address(collector), 100 ether);
-        tokenOut.mint(address(newRouter), 100 ether);
-
-        bytes memory swapData = abi.encodeWithSelector(
-            IMockUniversalRouter.execute.selector, abi.encode(address(tokenIn), address(tokenOut), 100 ether, 100 ether)
-        );
-
-        vm.prank(address(collector));
-        tokenIn.approve(address(newRouter), 100 ether);
-        vm.prank(caller);
-        collector.swapBalance(swapData, 0);
-
-        assertEq(tokenIn.balanceOf(address(collector)), 0 ether);
-        assertEq(tokenOut.balanceOf(address(collector)), 100 ether);
-        assertEq(tokenIn.balanceOf(address(newRouter)), 100 ether);
-        assertEq(tokenOut.balanceOf(address(newRouter)), 0 ether);
-    }
-
-    function testSetUniversalRouterNotOwner() public {
-        address newUniversalRouter = makeAddr("newUniversalRouter");
-        vm.expectRevert("UNAUTHORIZED");
-        collector.setUniversalRouter(newUniversalRouter);
     }
 }
