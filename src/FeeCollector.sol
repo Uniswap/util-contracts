@@ -71,7 +71,7 @@ contract FeeCollector is Owned, IFeeCollector {
     function revokePermit2Approval(ERC20[] calldata tokensToRevoke, address spender) external onlyOwner {
         unchecked {
             for (uint256 i = 0; i < tokensToRevoke.length; i++) {
-                permit2.approve(address(tokensToRevoke[i]), spender, 0, MAX_PERMIT2_DEADLINE);
+                permit2.approve(address(tokensToRevoke[i]), spender, 0, 0);
             }
         }
     }
