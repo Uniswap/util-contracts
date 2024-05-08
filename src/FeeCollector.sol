@@ -11,10 +11,6 @@ import {IPermit2} from "./external/IPermit2.sol";
 contract FeeCollector is Owned, IFeeCollector {
     using SafeTransferLib for ERC20;
 
-    error UniversalRouterCallFailed();
-
-    event UniversalRouterChanged(address oldUniversalRouter, address newUniversalRouter);
-
     address public universalRouter;
 
     ERC20 public immutable feeToken;
