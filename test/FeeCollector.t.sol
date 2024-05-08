@@ -174,6 +174,7 @@ contract FeeCollectorTest is Test {
 
         assertEq(tokenIn.allowance(address(collector), permit2), 0);
     }
+
     function testSetUniversalRouter() public {
         assertEq(collector.universalRouter(), address(router));
         address newUniversalRouter = makeAddr("newUniversalRouter");
