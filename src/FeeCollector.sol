@@ -11,9 +11,7 @@ import {IPermit2} from "./external/IPermit2.sol";
 contract FeeCollector is Owned, IFeeCollector {
     using SafeTransferLib for ERC20;
 
-    error UniversalRouterCallFailed();
-
-    address public immutable universalRouter;
+    address public universalRouter;
 
     ERC20 public immutable feeToken;
     IPermit2 public immutable permit2;
@@ -79,6 +77,12 @@ contract FeeCollector is Owned, IFeeCollector {
     /// @inheritdoc IFeeCollector
     function withdrawFeeToken(address feeRecipient, uint256 amount) external onlyOwner {
         feeToken.safeTransfer(feeRecipient, amount);
+    }
+
+    /// @inheritdoc IFeeCollector
+    function setUniversalRouter(address _universalRouter) external onlyOwner {
+        emit UniversalRouterChanged(universalRouter, _universalRouter);
+        universalRouter = _universalRouter;
     }
 
     receive() external payable {}
