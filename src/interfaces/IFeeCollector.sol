@@ -5,9 +5,6 @@ import {ERC20} from "solmate/tokens/ERC20.sol";
 
 /// @notice The collector of protocol fees that will be used to swap and send to a fee recipient address.
 interface IFeeCollector {
-    /// @notice Error thrown when the call to UniversalRouter fails.
-    error UniversalRouterCallFailed();
-
     /// @notice Swaps the contract balance.
     /// @param swapData The bytes call data to be forwarded to UniversalRouter.
     /// @param nativeValue The amount of native currency to send to UniversalRouter.

@@ -10,8 +10,9 @@ import {IMockUniversalRouter} from "./mock/MockUniversalRouter.sol";
 import {FeeCollector} from "../src/FeeCollector.sol";
 import {IFeeCollector} from "../src/interfaces/IFeeCollector.sol";
 import {FeeCollectorEvents} from "../src/interfaces/FeeCollectorEvents.sol";
+import {FeeCollectorErrors} from "../src/interfaces/FeeCollectorErrors.sol";
 
-contract FeeCollectorTest is Test, FeeCollectorEvents {
+contract FeeCollectorTest is Test, FeeCollectorErrors, FeeCollectorEvents {
     FeeCollector public collector;
 
     address caller;
@@ -88,7 +89,7 @@ contract FeeCollectorTest is Test, FeeCollectorEvents {
 
         vm.prank(address(collector));
         tokenIn.approve(address(router), 100 ether);
-        vm.expectRevert(IFeeCollector.UniversalRouterCallFailed.selector);
+        vm.expectRevert(UniversalRouterCallFailed.selector);
         vm.prank(caller);
         collector.swapBalance(badSwapCallData, 0);
 
