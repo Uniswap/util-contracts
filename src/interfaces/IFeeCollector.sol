@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
+import {IPermit2} from "../external/IPermit2.sol";
 
 /// @notice The collector of protocol fees that will be used to swap and send to a fee recipient address.
 interface IFeeCollector {
@@ -23,6 +24,14 @@ interface IFeeCollector {
     /// @param nativeValue The amount of native currency to send to UniversalRouter.
     /// @param tokensToApprove An array of ERC20 tokens to approve for spending.
     function swapBalance(bytes calldata swapData, uint256 nativeValue, ERC20[] calldata tokensToApprove) external;
+
+    /// @notice Revokes approvals on tokens by setting their allowance to 0.
+    /// @param tokensToRevoke The token to revoke the approval for.
+    function revokeTokenApprovals(ERC20[] calldata tokensToRevoke) external;
+
+    /// @notice Revokes the permit2 allowance of a spender by setting token allowances to 0.
+    /// @param approvals The approvals to revoke.
+    function revokePermit2Approvals(IPermit2.TokenSpenderPair[] calldata approvals) external;
 
     /// @notice Transfers the fee token balance from this contract to the fee recipient.
     /// @param feeRecipient The address to send the fee token balance to.

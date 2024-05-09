@@ -28,7 +28,7 @@ contract FeeCollectorTest is Test {
         // Mock owner and fee recipient
         owner = makeAddr("owner");
         feeRecipient = makeAddr("feeRecipient");
-        permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
+        permit2 = makeAddr("permit2");
         mockFeeToken = new MockToken();
         tokenIn = new MockToken();
         tokenOut = new MockToken();
@@ -157,6 +157,22 @@ contract FeeCollectorTest is Test {
         vm.expectRevert("UNAUTHORIZED");
         collector.transferOwnership(newOwner);
         assertEq(collector.owner(), owner);
+    }
+
+    function testrevokeTokenApprovals() public {
+        assertEq(tokenIn.allowance(address(collector), permit2), 0);
+
+        vm.prank(address(collector));
+        tokenIn.approve(permit2, 100 ether);
+        assertEq(tokenIn.allowance(address(collector), permit2), 100 ether);
+
+        ERC20[] memory tokensToRevoke = new ERC20[](1);
+        tokensToRevoke[0] = tokenIn;
+
+        vm.prank(owner);
+        collector.revokeTokenApprovals(tokensToRevoke);
+
+        assertEq(tokenIn.allowance(address(collector), permit2), 0);
     }
 
     function testSetUniversalRouter() public {

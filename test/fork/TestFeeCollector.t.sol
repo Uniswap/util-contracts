@@ -8,6 +8,7 @@ import {MockToken} from "../mock/MockToken.sol";
 import {FeeCollector} from "../../src/FeeCollector.sol";
 import {IFeeCollector} from "../../src/interfaces/IFeeCollector.sol";
 import {IPermit2} from "../../src/external/IPermit2.sol";
+import {IAllowanceTransfer} from "../../src/external/IAllowanceTransfer.sol";
 
 contract FeeCollectorTest is Test {
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
@@ -39,14 +40,14 @@ contract FeeCollectorTest is Test {
 
     function testSwapBalance() public {
         vm.prank(WHALE);
-        DAI.transfer(FEE_COLLECTOR, 1000 ether);
+        DAI.transfer(address(collector), 1000 ether);
 
         // Check balances and allowances
         uint256 preSwapBalance = USDC.balanceOf(address(feeRecipient));
-        assertEq(DAI.balanceOf(FEE_COLLECTOR), 1000 ether);
-        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
-        assertEq(DAI.allowance(FEE_COLLECTOR, PERMIT2), 0);
-        (uint160 preSwapAllowance,,) = permit2.allowance(FEE_COLLECTOR, address(DAI), UNIVERSAL_ROUTER);
+        assertEq(DAI.balanceOf(address(collector)), 1000 ether);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+        assertEq(DAI.allowance(address(collector), PERMIT2), 0);
+        (uint160 preSwapAllowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(preSwapAllowance, 0);
 
         // Build params for approve and swap
@@ -54,7 +55,7 @@ contract FeeCollectorTest is Test {
             hex"24856bc3000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000010000000000000000000000000068b3465833fb72A70ecDF485E0e4C7bD8665Fc450000000000000000000000000000000000000000000000056bc75e2d631000000000000000000000000000000000000000000000000000000000000005adccc500000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b6b175474e89094c44da98b954eedeac495271d0f000064a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000000000000000000000";
 
         // Approve DAI to permit2 and permit2 to universal router
-        vm.startPrank(FEE_COLLECTOR);
+        vm.startPrank(address(collector));
         DAI.approve(PERMIT2, type(uint256).max);
         permit2.approve(address(DAI), UNIVERSAL_ROUTER, type(uint160).max, type(uint48).max);
         vm.stopPrank();
@@ -70,19 +71,19 @@ contract FeeCollectorTest is Test {
         vm.prank(owner);
         collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
-        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
+        assertEq(USDC.balanceOf(address(collector)), 0);
     }
 
     function testSwapBalanceWithApproves() public {
         vm.prank(WHALE);
-        DAI.transfer(FEE_COLLECTOR, 1000 ether);
+        DAI.transfer(address(collector), 1000 ether);
 
         // Check balances and allowances
-        assertEq(DAI.balanceOf(FEE_COLLECTOR), 1000 ether);
+        assertEq(DAI.balanceOf(address(collector)), 1000 ether);
         assertEq(USDC.balanceOf(address(feeRecipient)), 0);
-        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
-        assertEq(DAI.allowance(FEE_COLLECTOR, PERMIT2), 0);
-        (uint160 preSwapAllowance,,) = permit2.allowance(FEE_COLLECTOR, address(DAI), UNIVERSAL_ROUTER);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+        assertEq(DAI.allowance(address(collector), PERMIT2), 0);
+        (uint160 preSwapAllowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(preSwapAllowance, 0);
 
         // Build params for approve and swap
@@ -96,8 +97,8 @@ contract FeeCollectorTest is Test {
         collector.swapBalance(DAI_USDC_UR_CALLDATA, 0, tokensToApprove);
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
         assertEq(collectorUSDCBalance, 99989240);
-        assertEq(DAI.allowance(FEE_COLLECTOR, PERMIT2), type(uint256).max);
-        (uint160 postSwapAllowance,,) = permit2.allowance(FEE_COLLECTOR, address(DAI), UNIVERSAL_ROUTER);
+        assertEq(DAI.allowance(address(collector), PERMIT2), type(uint256).max);
+        (uint160 postSwapAllowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(postSwapAllowance, type(uint160).max);
 
         // Withdraw USDC to feeRecipient
@@ -105,15 +106,15 @@ contract FeeCollectorTest is Test {
         vm.prank(owner);
         collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), collectorUSDCBalance);
-        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
+        assertEq(USDC.balanceOf(address(collector)), 0);
     }
 
     function testSwapBalanceNative() public {
-        vm.deal(FEE_COLLECTOR, 1000 ether);
+        vm.deal(address(collector), 1000 ether);
 
         // Check balances and allowances
         uint256 preSwapBalance = USDC.balanceOf(address(feeRecipient));
-        assertEq(FEE_COLLECTOR.balance, 1000 ether);
+        assertEq(address(collector).balance, 1000 ether);
 
         // Build params for native swap
         bytes memory ETH_USDC_UR_CALLDATA =
@@ -129,18 +130,18 @@ contract FeeCollectorTest is Test {
         vm.prank(owner);
         collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
-        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
+        assertEq(USDC.balanceOf(address(collector)), 0);
     }
 
     function testSwapBalanceBatchSwap() public {
         vm.prank(WHALE);
-        DAI.transfer(FEE_COLLECTOR, 100 ether);
-        vm.deal(FEE_COLLECTOR, 1000 ether);
+        DAI.transfer(address(collector), 100 ether);
+        vm.deal(address(collector), 1000 ether);
 
         // Check balances and allowances
         uint256 preSwapBalance = USDC.balanceOf(address(feeRecipient));
-        assertEq(FEE_COLLECTOR.balance, 1000 ether);
-        assertEq(DAI.balanceOf(FEE_COLLECTOR), 100 ether);
+        assertEq(address(collector).balance, 1000 ether);
+        assertEq(DAI.balanceOf(address(collector)), 100 ether);
 
         // Build params for approve and swap
         ERC20[] memory tokensToApprove = new ERC20[](1);
@@ -152,8 +153,8 @@ contract FeeCollectorTest is Test {
         vm.prank(owner);
         collector.swapBalance(ETH_AND_DAI_TO_USDC_UR_CALLDATA, 1000 ether, tokensToApprove);
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
-        assertEq(DAI.balanceOf(FEE_COLLECTOR), 0);
-        assertEq(FEE_COLLECTOR.balance, 0);
+        assertEq(DAI.balanceOf(address(collector)), 0);
+        assertEq(address(collector).balance, 0);
         assertEq(collectorUSDCBalance, 1531851169257);
 
         // Withdraw USDC to feeRecipient
@@ -161,6 +162,88 @@ contract FeeCollectorTest is Test {
         vm.prank(owner);
         collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), preSwapBalance + collectorUSDCBalance);
-        assertEq(USDC.balanceOf(FEE_COLLECTOR), 0);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+    }
+
+    function testRevokeApprovalsAndSwapBalanceWithApprovals() public {
+        // Approve DAI to permit2 and permit2 to universal router
+        vm.startPrank(address(collector));
+        DAI.approve(PERMIT2, type(uint256).max);
+        permit2.approve(address(DAI), UNIVERSAL_ROUTER, type(uint160).max, type(uint48).max);
+        vm.stopPrank();
+
+        // Ensure approvals are set
+        assertEq(DAI.allowance(address(collector), PERMIT2), type(uint256).max);
+        (uint160 permit2Allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(permit2Allowance, type(uint160).max);
+
+        // revoke token approval
+        ERC20[] memory tokensToRevoke = new ERC20[](1);
+        tokensToRevoke[0] = DAI;
+
+        vm.prank(owner);
+        collector.revokeTokenApprovals(tokensToRevoke);
+        assertEq(DAI.allowance(address(collector), PERMIT2), 0);
+
+        // revoke permit2 approval
+        IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
+        approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
+
+        vm.prank(owner);
+        collector.revokePermit2Approvals(approvals);
+        (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 0);
+
+        // SwapBalance like normal and make the required approvals
+        vm.prank(WHALE);
+        DAI.transfer(address(collector), 1000 ether);
+
+        // Check balances and allowances
+        assertEq(DAI.balanceOf(address(collector)), 1000 ether);
+        assertEq(USDC.balanceOf(address(feeRecipient)), 0);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+        assertEq(DAI.allowance(address(collector), PERMIT2), 0);
+        (uint160 preSwapAllowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(preSwapAllowance, 0);
+
+        // Build params for approve and swap
+        ERC20[] memory tokensToApprove = new ERC20[](1);
+        tokensToApprove[0] = DAI;
+        bytes memory DAI_USDC_UR_CALLDATA =
+            hex"24856bc3000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000010000000000000000000000000068b3465833fb72A70ecDF485E0e4C7bD8665Fc450000000000000000000000000000000000000000000000056bc75e2d631000000000000000000000000000000000000000000000000000000000000005adccc500000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b6b175474e89094c44da98b954eedeac495271d0f000064a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000000000000000000000";
+
+        // Swap collector DAI balance to USDC
+        vm.prank(owner);
+        collector.swapBalance(DAI_USDC_UR_CALLDATA, 0, tokensToApprove);
+        uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
+        assertEq(collectorUSDCBalance, 99989240);
+        assertEq(DAI.allowance(address(collector), PERMIT2), type(uint256).max);
+        (uint160 postSwapAllowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(postSwapAllowance, type(uint160).max);
+
+        // Withdraw USDC to feeRecipient
+        assertEq(USDC.balanceOf(address(feeRecipient)), 0);
+        vm.prank(owner);
+        collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
+        assertEq(USDC.balanceOf(address(feeRecipient)), collectorUSDCBalance);
+        assertEq(USDC.balanceOf(address(collector)), 0);
+    }
+
+    function testrevokePermit2Approvals() public {
+        (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 0);
+
+        vm.prank(address(collector));
+        permit2.approve(address(DAI), UNIVERSAL_ROUTER, 100 ether, 0);
+        (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 100 ether);
+
+        IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
+        approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
+
+        vm.prank(owner);
+        collector.revokePermit2Approvals(approvals);
+        (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(allowance, 0);
     }
 }
