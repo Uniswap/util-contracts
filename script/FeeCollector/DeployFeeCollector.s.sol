@@ -18,6 +18,9 @@ abstract contract DeployFeeCollector is Script {
     address public constant OWNER = 0xbE84D31B2eE049DCb1d8E7c798511632b44d1b55;
     address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
+    // For mainnet parameters, deploys the FeeCollector to 0x000000fee2Ab0fF8Dc826D3d7f45328e9Cc0471f
+    bytes32 constant SALT = bytes32(uint256(0x00000000000000000000000000000000000000008afde8517c5ada7fb0310014));
+
     function setUp() public virtual {}
 
     function run() public returns (FeeCollector collector) {
@@ -29,7 +32,7 @@ abstract contract DeployFeeCollector is Script {
         require(params.feeToken != address(0), "feeToken not set");
 
         vm.startBroadcast(privateKey);
-        collector = new FeeCollector{salt: 0x00}(params.owner, params.universalRouter, params.permit2, params.feeToken);
+        collector = new FeeCollector{salt: SALT}(params.owner, params.universalRouter, params.permit2, params.feeToken);
         vm.stopBroadcast();
 
         console2.log("Successfully deployed FeeCollector", address(collector));
