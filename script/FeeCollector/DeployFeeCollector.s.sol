@@ -18,7 +18,7 @@ abstract contract DeployFeeCollector is Script {
     address public constant OWNER = 0xbE84D31B2eE049DCb1d8E7c798511632b44d1b55;
     address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
-    // For mainnet parameters, deploys the FeeCollector to 0x000000fee2Ab0fF8Dc826D3d7f45328e9Cc0471f
+    // For mainnet parameters, deploys the FeeCollector to 0x000000fee13a103A10D593b9AE06b3e05F2E7E1c
     bytes32 constant SALT = bytes32(uint256(0x0000000000000000000000000000000000000000e6a691a183251100795200f0));
 
     function setUp() public virtual {}
@@ -30,7 +30,7 @@ abstract contract DeployFeeCollector is Script {
         require(params.universalRouter != address(0), "universalRouter not set");
         require(params.permit2 != address(0), "permit2 not set");
         require(params.feeToken != address(0), "feeToken not set");
-        
+
         vm.startBroadcast(privateKey);
         collector = new FeeCollector{salt: SALT}(params.owner, params.universalRouter, params.permit2, params.feeToken);
         vm.stopBroadcast();
