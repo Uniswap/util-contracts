@@ -172,24 +172,29 @@ contract FeeCollectorTest is Test {
         permit2.approve(address(DAI), UNIVERSAL_ROUTER, type(uint160).max, type(uint48).max);
         vm.stopPrank();
 
+        // Ensure approvals are set
+        assertEq(DAI.allowance(address(collector), PERMIT2), type(uint256).max);
+        (uint160 permit2Allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
+        assertEq(permit2Allowance, type(uint160).max);
+
+        // revoke token approval
         ERC20[] memory tokensToRevoke = new ERC20[](1);
         tokensToRevoke[0] = DAI;
 
-        // revoke token approval
         vm.prank(owner);
         collector.revokeTokenApprovals(tokensToRevoke);
         assertEq(DAI.allowance(address(collector), PERMIT2), 0);
 
+        // revoke permit2 approval
         IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
         approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
 
-        // revoke permit2 approval
         vm.prank(owner);
         collector.revokePermit2Approvals(approvals);
         (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
 
-        // SwapBalance like normal with approves
+        // SwapBalance like normal and make the required approvals
         vm.prank(WHALE);
         DAI.transfer(address(collector), 1000 ether);
 
