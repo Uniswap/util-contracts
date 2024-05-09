@@ -67,7 +67,7 @@ contract FeeCollector is Owned, IFeeCollector {
 
     /// @inheritdoc IFeeCollector
     function revokePermit2Approvals(IPermit2.TokenSpenderPair[] calldata approvals) external onlyOwner {
-       permit2.lockdown(approvals);
+        permit2.lockdown(approvals);
     }
 
     /// @inheritdoc IFeeCollector

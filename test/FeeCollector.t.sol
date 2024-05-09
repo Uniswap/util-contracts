@@ -169,7 +169,7 @@ contract FeeCollectorTest is Test {
         ERC20[] memory tokensToRevoke = new ERC20[](1);
         tokensToRevoke[0] = tokenIn;
 
-        vm.prank(caller);
+        vm.prank(owner);
         collector.revokeTokenApprovals(tokensToRevoke);
 
         assertEq(tokenIn.allowance(address(collector), permit2), 0);

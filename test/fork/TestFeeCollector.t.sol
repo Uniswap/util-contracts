@@ -176,15 +176,15 @@ contract FeeCollectorTest is Test {
         tokensToRevoke[0] = DAI;
 
         // revoke token approval
-        vm.prank(caller);
+        vm.prank(owner);
         collector.revokeTokenApprovals(tokensToRevoke);
         assertEq(DAI.allowance(address(collector), PERMIT2), 0);
-        
+
         IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
         approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
 
         // revoke permit2 approval
-        vm.prank(caller);
+        vm.prank(owner);
         collector.revokePermit2Approvals(approvals);
         (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
@@ -208,7 +208,7 @@ contract FeeCollectorTest is Test {
             hex"24856bc3000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000010000000000000000000000000068b3465833fb72A70ecDF485E0e4C7bD8665Fc450000000000000000000000000000000000000000000000056bc75e2d631000000000000000000000000000000000000000000000000000000000000005adccc500000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002b6b175474e89094c44da98b954eedeac495271d0f000064a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000000000000000000000";
 
         // Swap collector DAI balance to USDC
-        vm.prank(caller);
+        vm.prank(owner);
         collector.swapBalance(DAI_USDC_UR_CALLDATA, 0, tokensToApprove);
         uint256 collectorUSDCBalance = USDC.balanceOf(address(collector));
         assertEq(collectorUSDCBalance, 99989240);
@@ -218,7 +218,7 @@ contract FeeCollectorTest is Test {
 
         // Withdraw USDC to feeRecipient
         assertEq(USDC.balanceOf(address(feeRecipient)), 0);
-        vm.prank(caller);
+        vm.prank(owner);
         collector.withdrawFeeToken(feeRecipient, collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(feeRecipient)), collectorUSDCBalance);
         assertEq(USDC.balanceOf(address(collector)), 0);
@@ -236,7 +236,7 @@ contract FeeCollectorTest is Test {
         IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
         approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
 
-        vm.prank(caller);
+        vm.prank(owner);
         collector.revokePermit2Approvals(approvals);
         (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
