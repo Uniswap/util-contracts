@@ -57,7 +57,7 @@ contract FeeCollector is Owned, IFeeCollector {
     }
 
     /// @inheritdoc IFeeCollector
-    function revokeTokenApproval(ERC20[] calldata tokensToRevoke) external onlyOwner {
+    function revokeTokenApprovals(ERC20[] calldata tokensToRevoke) external onlyOwner {
         unchecked {
             for (uint256 i = 0; i < tokensToRevoke.length; i++) {
                 tokensToRevoke[i].safeApprove(address(permit2), 0);
@@ -66,12 +66,8 @@ contract FeeCollector is Owned, IFeeCollector {
     }
 
     /// @inheritdoc IFeeCollector
-    function revokePermit2Approval(ERC20[] calldata tokensToRevoke, address spender) external onlyOwner {
-        unchecked {
-            for (uint256 i = 0; i < tokensToRevoke.length; i++) {
-                permit2.approve(address(tokensToRevoke[i]), spender, 0, 0);
-            }
-        }
+    function revokePermit2Approvals(IPermit2.TokenSpenderPair[] calldata approvals) external onlyOwner {
+       permit2.lockdown(approvals);
     }
 
     /// @inheritdoc IFeeCollector

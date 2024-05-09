@@ -159,7 +159,7 @@ contract FeeCollectorTest is Test {
         assertEq(collector.owner(), caller);
     }
 
-    function testRevokeTokenApproval() public {
+    function testrevokeTokenApprovals() public {
         assertEq(tokenIn.allowance(address(collector), permit2), 0);
 
         vm.prank(address(collector));
@@ -170,7 +170,7 @@ contract FeeCollectorTest is Test {
         tokensToRevoke[0] = tokenIn;
 
         vm.prank(caller);
-        collector.revokeTokenApproval(tokensToRevoke);
+        collector.revokeTokenApprovals(tokensToRevoke);
 
         assertEq(tokenIn.allowance(address(collector), permit2), 0);
     }

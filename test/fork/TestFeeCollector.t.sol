@@ -8,6 +8,7 @@ import {MockToken} from "../mock/MockToken.sol";
 import {FeeCollector} from "../../src/FeeCollector.sol";
 import {IFeeCollector} from "../../src/interfaces/IFeeCollector.sol";
 import {IPermit2} from "../../src/external/IPermit2.sol";
+import {IAllowanceTransfer} from "../../src/external/IAllowanceTransfer.sol";
 
 contract FeeCollectorTest is Test {
     ERC20 constant DAI = ERC20(0x6B175474E89094C44Da98b954EedeAC495271d0F);
@@ -176,12 +177,15 @@ contract FeeCollectorTest is Test {
 
         // revoke token approval
         vm.prank(caller);
-        collector.revokeTokenApproval(tokensToRevoke);
+        collector.revokeTokenApprovals(tokensToRevoke);
         assertEq(DAI.allowance(address(collector), PERMIT2), 0);
+        
+        IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
+        approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
 
         // revoke permit2 approval
         vm.prank(caller);
-        collector.revokePermit2Approval(tokensToRevoke, UNIVERSAL_ROUTER);
+        collector.revokePermit2Approvals(approvals);
         (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
 
@@ -220,7 +224,7 @@ contract FeeCollectorTest is Test {
         assertEq(USDC.balanceOf(address(collector)), 0);
     }
 
-    function testRevokePermit2Approval() public {
+    function testrevokePermit2Approvals() public {
         (uint256 allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
 
@@ -229,11 +233,11 @@ contract FeeCollectorTest is Test {
         (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 100 ether);
 
-        ERC20[] memory tokensToRevoke = new ERC20[](1);
-        tokensToRevoke[0] = DAI;
+        IAllowanceTransfer.TokenSpenderPair[] memory approvals = new IAllowanceTransfer.TokenSpenderPair[](1);
+        approvals[0] = IAllowanceTransfer.TokenSpenderPair(address(DAI), UNIVERSAL_ROUTER);
 
         vm.prank(caller);
-        collector.revokePermit2Approval(tokensToRevoke, UNIVERSAL_ROUTER);
+        collector.revokePermit2Approvals(approvals);
         (allowance,,) = permit2.allowance(address(collector), address(DAI), UNIVERSAL_ROUTER);
         assertEq(allowance, 0);
     }
