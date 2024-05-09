@@ -18,8 +18,8 @@ abstract contract DeployFeeCollector is Script {
     address public constant OWNER = 0xbE84D31B2eE049DCb1d8E7c798511632b44d1b55;
     address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
 
-    // For mainnet parameters, deploys the FeeCollector to 0x000000fee2Ab0fF8Dc826D3d7f45328e9Cc0471f
-    bytes32 constant SALT = bytes32(uint256(0x00000000000000000000000000000000000000008afde8517c5ada7fb0310014));
+    // For mainnet parameters, deploys the FeeCollector to 0x000000fee13a103A10D593b9AE06b3e05F2E7E1c
+    bytes32 constant SALT = bytes32(uint256(0x0000000000000000000000000000000000000000e6a691a183251100795200f0));
 
     function setUp() public virtual {}
 
