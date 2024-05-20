@@ -103,10 +103,10 @@ contract FeeOnTransferDetector {
 
         // check to see if token has external transfer fees
         bool hasExternalFees;
-        balanceBeforeLoan = tokenBorrowed.balanceOf(msg.sender);
-        try this.callTransfer(tokenBorrowed, msg.sender, amountBorrowed, balanceBeforeLoan + amountBorrowed) {} 
-        catch (bytes memory) {
-            hasExternalFees = abi.decode(data, (bool));
+        balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
+        try this.callTransfer(tokenBorrowed, factoryV2, amountBorrowed, balanceBeforeLoan + amountBorrowed) {}
+        catch (bytes memory revertData) {
+            hasExternalFees = abi.decode(revertData, (bool));
         }
 
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
@@ -118,7 +118,8 @@ contract FeeOnTransferDetector {
             sellFeeBps = buyFeeBps;
         }
 
-        bytes memory fees = abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, hasExternalFees: hasExternalFees}));
+        bytes memory fees =
+            abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, hasExternalFees: hasExternalFees}));
 
         // revert with the abi encoded fees
         assembly {
@@ -134,9 +135,9 @@ contract FeeOnTransferDetector {
 
     function callTransfer(ERC20 token, address to, uint256 amount, uint256 expectedBalance) external {
         token.safeTransfer(to, amount);
-        bytes memory reason = token.balanceOf(to) == expectedBalance ? abi.encode(false) : abi.encode(true);
+        bytes memory feeTakenOnTransfer = abi.encode(token.balanceOf(to) != expectedBalance);
         assembly {
-            revert(add(32, reason), mload(reason))
+            revert(add(32, feeTakenOnTransfer), mload(feeTakenOnTransfer))
         }
     }
 }
