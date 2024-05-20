@@ -33,6 +33,7 @@ contract FeeOnTransferDetectorTest is Test {
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
         assertEq(fees.buyFeeBps, 200);
         assertEq(fees.sellFeeBps, 500);
+        assertEq(fees.hasExternalFees, false);
     }
 
     function testBasicFotTokenFuzz(uint16 buyFee, uint16 sellFee) public {
@@ -49,6 +50,7 @@ contract FeeOnTransferDetectorTest is Test {
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
         assertEq(fees.buyFeeBps, buyFee);
         assertEq(fees.sellFeeBps, sellFee);
+        assertEq(fees.hasExternalFees, false);
     }
 
     function testTransferFailsErrorPassthrough() public {

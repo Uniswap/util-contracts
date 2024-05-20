@@ -10,6 +10,7 @@ import "./lib/UniswapV2Library.sol";
 struct TokenFees {
     uint256 buyFeeBps;
     uint256 sellFeeBps;
+    bool hasExternalFees;
 }
 
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
@@ -80,7 +81,7 @@ contract FeeOnTransferDetector {
     }
 
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
-        if (reason.length != 64) {
+        if (reason.length != 96) {
             assembly {
                 revert(add(32, reason), mload(reason))
             }
@@ -99,6 +100,15 @@ contract FeeOnTransferDetector {
         uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - balanceBeforeLoan;
 
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
+
+        // check to see if token has external transfer fees
+        bool hasExternalFees;
+        balanceBeforeLoan = tokenBorrowed.balanceOf(msg.sender);
+        try this.callTransfer(tokenBorrowed, msg.sender, amountBorrowed, balanceBeforeLoan + amountBorrowed) {} 
+        catch (bytes memory) {
+            hasExternalFees = abi.decode(data, (bool));
+        }
+
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         uint256 sellFeeBps;
         try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
@@ -108,7 +118,7 @@ contract FeeOnTransferDetector {
             sellFeeBps = buyFeeBps;
         }
 
-        bytes memory fees = abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps}));
+        bytes memory fees = abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, hasExternalFees: hasExternalFees}));
 
         // revert with the abi encoded fees
         assembly {
@@ -120,5 +130,13 @@ contract FeeOnTransferDetector {
     // because try/catch does not handle calling libraries
     function callTransfer(ERC20 token, address to, uint256 amount) external {
         token.safeTransfer(to, amount);
+    }
+
+    function callTransfer(ERC20 token, address to, uint256 amount, uint256 expectedBalance) external {
+        token.safeTransfer(to, amount);
+        bytes memory reason = token.balanceOf(to) == expectedBalance ? abi.encode(false) : abi.encode(true);
+        assembly {
+            revert(add(32, reason), mload(reason))
+        }
     }
 }
