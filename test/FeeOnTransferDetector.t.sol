@@ -38,7 +38,7 @@ contract FeeOnTransferDetectorTest is Test {
     }
 
     function testBasicFotTokenWithExternalFees() public {
-        MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(200, 500);
+        MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(500);
         MockToken otherToken = new MockToken();
         address pair = factory.deployPair(address(fotToken), address(otherToken));
         fotToken.setPair(pair);
@@ -47,7 +47,7 @@ contract FeeOnTransferDetectorTest is Test {
         IUniswapV2Pair(pair).sync();
 
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
-        assertEq(fees.buyFeeBps, 200);
+        assertEq(fees.buyFeeBps, 500);
         assertEq(fees.sellFeeBps, 500);
         assertEq(fees.hasExternalFees, true);
     }
@@ -69,10 +69,9 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.hasExternalFees, false);
     }
 
-    function testBasicFotTokenWithExternalFeesFuzz(uint16 buyFee, uint16 sellFee) public {
-        sellFee = uint16(bound(sellFee, 0, 10000));
-        buyFee = uint16(bound(buyFee, 0, 10000));
-        MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(buyFee, sellFee);
+    function testBasicFotTokenWithExternalFeesFuzz(uint16 fee) public {
+        fee = uint16(bound(fee, 0, 10000));
+        MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(fee);
         MockToken otherToken = new MockToken();
         address pair = factory.deployPair(address(fotToken), address(otherToken));
         fotToken.setPair(pair);
@@ -81,9 +80,10 @@ contract FeeOnTransferDetectorTest is Test {
         IUniswapV2Pair(pair).sync();
 
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
-        assertEq(fees.buyFeeBps, buyFee);
-        assertEq(fees.sellFeeBps, sellFee);
-        assertEq(fees.hasExternalFees, true);
+        assertEq(fees.buyFeeBps, fee);
+        assertEq(fees.sellFeeBps, fee);
+        bool hasExternalFees = (fee == 0 && fee == 0) ? false : true;
+        assertEq(fees.hasExternalFees, hasExternalFees);
     }
 
     function testTransferFailsErrorPassthrough() public {

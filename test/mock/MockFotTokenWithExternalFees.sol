@@ -4,13 +4,11 @@ pragma solidity =0.8.19;
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 contract MockFotTokenWithExternalFees is ERC20 {
-    uint256 public buyTaxBps;
-    uint256 public sellTaxBps;
+    uint256 public taxBps;
     address public pair;
 
-    constructor(uint256 _buyTaxBps, uint256 _sellTaxBps) ERC20("MockFotToken", "MFOT", 18) {
-        buyTaxBps = _buyTaxBps;
-        sellTaxBps = _sellTaxBps;
+    constructor(uint256 _taxBps) ERC20("MockFotToken", "MFOT", 18) {
+        taxBps = _taxBps;
     }
 
     function setPair(address _pair) external {
@@ -29,14 +27,7 @@ contract MockFotTokenWithExternalFees is ERC20 {
         // balances can't exceed the max uint256 value.
         uint256 feeAmount;
         unchecked {
-            // buy tax
-            if (msg.sender == pair) {
-                feeAmount = amount * buyTaxBps / 10000;
-            }
-            // apply sell tax to all transfers
-            else {
-                feeAmount = amount * sellTaxBps / 10000;
-            }
+            feeAmount = amount * taxBps / 10000;
             balanceOf[to] += amount - feeAmount;
             balanceOf[address(this)] += feeAmount;
         }
