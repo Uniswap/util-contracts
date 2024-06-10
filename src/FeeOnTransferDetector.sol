@@ -21,8 +21,6 @@ contract FeeOnTransferDetector {
     error SameToken();
     error PairLookupFailed();
 
-    event Log(string message);
-
     uint256 constant BPS = 10_000;
     address internal immutable factoryV2;
 
@@ -117,7 +115,6 @@ contract FeeOnTransferDetector {
                 }
                 string memory reason = abi.decode(revertData, (string));
                 if (keccak256(bytes(reason)) == keccak256(bytes("TRANSFER_FAILED"))) {
-                    emit Log("EXTERNAL_TRANSFER_FAILED");
                     externalTransferFailed = true;
                 } else {
                     revert("UNKNOWN_EXTERNAL_TRANFER_FAILURE");
