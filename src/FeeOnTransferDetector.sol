@@ -20,7 +20,7 @@ contract FeeOnTransferDetector {
 
     error SameToken();
     error PairLookupFailed();
-    
+
     event Log(string message);
     event LogUint(uint256 number);
     event LogBytes(bytes data);
@@ -115,11 +115,12 @@ contract FeeOnTransferDetector {
         catch (bytes memory revertData) {
             emit LogBytes(revertData);
             emit LogUint(revertData.length);
-            if (revertData.length > 32) { // transfer itself failed so we did not return abi-encoded `feeTakenOnTransfer` boolean variable
+            if (revertData.length > 32) {
+                // transfer itself failed so we did not return abi-encoded `feeTakenOnTransfer` boolean variable
                 assembly {
                     revertData := add(revertData, 0x04)
                 }
-                string memory reason = abi.decode(revertData, (string));     
+                string memory reason = abi.decode(revertData, (string));
                 if (keccak256(bytes(reason)) == keccak256(bytes("TRANSFER_FAILED"))) {
                     emit Log("EXTERNAL_TRANSFER_FAILED");
                     externalTransferFailed = true;
@@ -140,8 +141,14 @@ contract FeeOnTransferDetector {
             sellFeeBps = buyFeeBps;
         }
 
-        bytes memory fees =
-            abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, feeTakenOnTransfer: feeTakenOnTransfer, externalTransferFailed: externalTransferFailed}));
+        bytes memory fees = abi.encode(
+            TokenFees({
+                buyFeeBps: buyFeeBps,
+                sellFeeBps: sellFeeBps,
+                feeTakenOnTransfer: feeTakenOnTransfer,
+                externalTransferFailed: externalTransferFailed
+            })
+        );
 
         emit LogBytes(fees);
         // revert with the abi encoded fees
@@ -157,7 +164,7 @@ contract FeeOnTransferDetector {
     }
 
     function callTransfer(ERC20 token, address to, uint256 amount, uint256 expectedBalance) external {
-        try this.callTransfer(token, to, amount) {} 
+        try this.callTransfer(token, to, amount) {}
         catch (bytes memory revertData) {
             emit LogBytes(revertData);
             if (revertData.length < 68) revert();

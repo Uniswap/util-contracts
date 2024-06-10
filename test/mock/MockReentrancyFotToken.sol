@@ -34,7 +34,7 @@ contract MockReentrancyFotToken is ERC20 {
         }
 
         // Only add in extra swap if is not buy/sell on the pair
-        if(to != pair && msg.sender != pair) {
+        if (to != pair && msg.sender != pair) {
             IUniswapV2Pair(pair).token0() == address(this)
                 ? IUniswapV2Pair(pair).swap(0, feeAmount, address(this), new bytes(0))
                 : IUniswapV2Pair(pair).swap(feeAmount, 0, address(this), new bytes(0));
