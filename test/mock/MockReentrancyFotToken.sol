@@ -20,7 +20,7 @@ contract MockReentrancyFotToken is ERC20 {
         _mint(to, amount);
     }
 
-    // this token takes a fee on all transfers, swapping it to ETH on the V2 pair
+    // this token takes a fee on all transfers, and swaps the fee on the V2 pair for external transfers (not buy/sells)
     function transfer(address to, uint256 amount) public override returns (bool) {
         balanceOf[msg.sender] -= amount;
 
