@@ -10,4 +10,7 @@ evm_version = "shanghai"
 
 [profile.fork]
 no_match_path = ""
-match_path = "*/fork/*"
+match_path = "*/fork/*/*/*"
+
+
+unknown_chain = { key = "d6t6nsi75237SaUxle2VLWC9UY1yxZyh", chain = 1, url = "https://virtual.mainnet.rpc.tenderly.co/b06086f4-872d-4dd5-ad1c-e3478f4574a4" }
