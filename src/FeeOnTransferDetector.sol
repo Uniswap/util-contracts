@@ -11,6 +11,7 @@ struct TokenFees {
     uint256 buyFeeBps;
     uint256 sellFeeBps;
     bool hasExternalFees;
+    bool externalTransferFailed;
 }
 
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
@@ -19,6 +20,10 @@ contract FeeOnTransferDetector {
 
     error SameToken();
     error PairLookupFailed();
+    
+    event Log(string message);
+    event LogUint(uint256 number);
+    event LogBytes(bytes data);
 
     uint256 constant BPS = 10_000;
     address internal immutable factoryV2;
@@ -76,12 +81,13 @@ contract FeeOnTransferDetector {
 
         try pair.swap(amount0Out, amount1Out, address(this), abi.encode(balanceBeforeLoan, amountToBorrow)) {}
         catch (bytes memory reason) {
+            emit LogBytes(reason);
             result = parseRevertReason(reason);
         }
     }
 
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
-        if (reason.length != 96) {
+        if (reason.length != 128) {
             assembly {
                 revert(add(32, reason), mload(reason))
             }
@@ -102,11 +108,27 @@ contract FeeOnTransferDetector {
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
 
         // check to see if token has external transfer fees
-        bool hasExternalFees;
+        bool hasExternalFees = false;
+        bool externalTransferFailed = false;
         balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
         try this.callTransfer(tokenBorrowed, factoryV2, amountBorrowed, balanceBeforeLoan + amountBorrowed) {}
         catch (bytes memory revertData) {
-            hasExternalFees = abi.decode(revertData, (bool));
+            emit LogBytes(revertData);
+            emit LogUint(revertData.length);
+            if (revertData.length > 32) { // transfer itself failed so we did not return abi-encoded `feeTakenOnTransfer` boolean variable
+                assembly {
+                    revertData := add(revertData, 0x04)
+                }
+                string memory reason = abi.decode(revertData, (string));     
+                if (keccak256(bytes(reason)) == keccak256(bytes("TRANSFER_FAILED"))) {
+                    emit Log("EXTERNAL_TRANSFER_FAILED");
+                    externalTransferFailed = true;
+                } else {
+                    revert("UNKNOWN_EXTERNAL_TRANFER_FAILURE");
+                }
+            } else {
+                hasExternalFees = abi.decode(revertData, (bool));
+            }
         }
 
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
@@ -119,8 +141,9 @@ contract FeeOnTransferDetector {
         }
 
         bytes memory fees =
-            abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, hasExternalFees: hasExternalFees}));
+            abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, hasExternalFees: hasExternalFees, externalTransferFailed: externalTransferFailed}));
 
+        emit LogBytes(fees);
         // revert with the abi encoded fees
         assembly {
             revert(add(32, fees), mload(fees))
@@ -134,7 +157,15 @@ contract FeeOnTransferDetector {
     }
 
     function callTransfer(ERC20 token, address to, uint256 amount, uint256 expectedBalance) external {
-        token.safeTransfer(to, amount);
+        try this.callTransfer(token, to, amount) {} 
+        catch (bytes memory revertData) {
+            emit LogBytes(revertData);
+            if (revertData.length < 68) revert();
+            assembly {
+                revertData := add(revertData, 0x04)
+            }
+            revert(abi.decode(revertData, (string)));
+        }
         bytes memory feeTakenOnTransfer = abi.encode(token.balanceOf(to) != expectedBalance);
         assembly {
             revert(add(32, feeTakenOnTransfer), mload(feeTakenOnTransfer))
