@@ -10,7 +10,7 @@ import "./lib/UniswapV2Library.sol";
 struct TokenFees {
     uint256 buyFeeBps;
     uint256 sellFeeBps;
-    bool hasExternalFees;
+    bool feeTakenOnTransfer;
     bool externalTransferFailed;
 }
 
@@ -108,7 +108,7 @@ contract FeeOnTransferDetector {
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
 
         // check to see if token has external transfer fees
-        bool hasExternalFees = false;
+        bool feeTakenOnTransfer = false;
         bool externalTransferFailed = false;
         balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
         try this.callTransfer(tokenBorrowed, factoryV2, amountBorrowed, balanceBeforeLoan + amountBorrowed) {}
@@ -127,7 +127,7 @@ contract FeeOnTransferDetector {
                     revert("UNKNOWN_EXTERNAL_TRANFER_FAILURE");
                 }
             } else {
-                hasExternalFees = abi.decode(revertData, (bool));
+                feeTakenOnTransfer = abi.decode(revertData, (bool));
             }
         }
 
@@ -141,7 +141,7 @@ contract FeeOnTransferDetector {
         }
 
         bytes memory fees =
-            abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, hasExternalFees: hasExternalFees, externalTransferFailed: externalTransferFailed}));
+            abi.encode(TokenFees({buyFeeBps: buyFeeBps, sellFeeBps: sellFeeBps, feeTakenOnTransfer: feeTakenOnTransfer, externalTransferFailed: externalTransferFailed}));
 
         emit LogBytes(fees);
         // revert with the abi encoded fees
