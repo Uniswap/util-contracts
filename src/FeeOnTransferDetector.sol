@@ -154,6 +154,8 @@ contract FeeOnTransferDetector {
         token.safeTransfer(to, amount);
     }
 
+    // function that reverts with a boolean indicating whether or not a fee is taken on the token transfer
+    // bubbles up any reverts from the token transfer
     function callTransfer(ERC20 token, address to, uint256 amount, uint256 expectedBalance) external {
         try this.callTransfer(token, to, amount) {}
         catch (bytes memory revertData) {
