@@ -10,3 +10,4 @@ evm_version = "shanghai"
 
 [profile.fork]
 match_path = "*/fork/*"
+no_match_path = "override/default/*"
