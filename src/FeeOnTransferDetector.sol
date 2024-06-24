@@ -104,7 +104,7 @@ contract FeeOnTransferDetector {
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
 
         (bool feeTakenOnTransfer, bool externalTransferFailed) =
-            getExternalTransferFees(tokenBorrowed, amountBorrowed, balanceBeforeLoan);
+            checkExternalTransfer(tokenBorrowed, amountBorrowed, balanceBeforeLoan);
 
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         uint256 sellFeeBps;
@@ -130,7 +130,7 @@ contract FeeOnTransferDetector {
         }
     }
 
-    /// @notice some tokens take fees even when not buy/selling to the pair, 
+    /// @notice some tokens take fees even when not buy/selling to the pair,
     ///         or they fail when transferred within the context of an existing swap
     /// @return feeTakenOnTransfer boolean indicating whether or not a fee is taken on token transfer
     /// @return externalTransferFailed boolean indicating whether or not the external transfer failed
