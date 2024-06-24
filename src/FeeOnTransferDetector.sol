@@ -102,27 +102,7 @@ contract FeeOnTransferDetector {
 
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
 
-        // check to see if token has external transfer fees
-        bool feeTakenOnTransfer = false;
-        bool externalTransferFailed = false;
-        balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
-        try this.callTransfer(tokenBorrowed, factoryV2, amountBorrowed, balanceBeforeLoan + amountBorrowed) {}
-        catch (bytes memory revertData) {
-            if (revertData.length > 32) {
-                // transfer itself failed so we did not return abi-encoded `feeTakenOnTransfer` boolean variable
-                assembly {
-                    revertData := add(revertData, 0x04)
-                }
-                string memory reason = abi.decode(revertData, (string));
-                if (keccak256(bytes(reason)) == keccak256(bytes("TRANSFER_FAILED"))) {
-                    externalTransferFailed = true;
-                } else {
-                    revert("UNKNOWN_EXTERNAL_TRANFER_FAILURE");
-                }
-            } else {
-                feeTakenOnTransfer = abi.decode(revertData, (bool));
-            }
-        }
+        (bool feeTakenOnTransfer, bool externalTransferFailed) = getExternalTransferFees(tokenBorrowed, amountBorrowed, balanceBeforeLoan);
 
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         uint256 sellFeeBps;
@@ -145,6 +125,30 @@ contract FeeOnTransferDetector {
         // revert with the abi encoded fees
         assembly {
             revert(add(32, fees), mload(fees))
+        }
+    }
+
+    /// @notice detects if a fee is taken on an external transfer or if it would fail
+    function getExternalTransferFees(ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 balanceBeforeLoan) internal returns (bool feeTakenOnTransfer, bool externalTransferFailed) {
+        feeTakenOnTransfer = false;
+        externalTransferFailed = false;
+        balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
+        try this.callTransfer(tokenBorrowed, factoryV2, amountBorrowed, balanceBeforeLoan + amountBorrowed) {}
+        catch (bytes memory revertData) {
+            if (revertData.length > 32) {
+                // transfer itself failed so we did not return abi-encoded `feeTakenOnTransfer` boolean variable
+                assembly {
+                    revertData := add(revertData, 0x04)
+                }
+                string memory reason = abi.decode(revertData, (string));
+                if (keccak256(bytes(reason)) == keccak256(bytes("TRANSFER_FAILED"))) {
+                    externalTransferFailed = true;
+                } else {
+                    revert("UNKNOWN_EXTERNAL_TRANFER_FAILURE");
+                }
+            } else {
+                feeTakenOnTransfer = abi.decode(revertData, (bool));
+            }
         }
     }
 
