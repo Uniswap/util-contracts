@@ -102,7 +102,8 @@ contract FeeOnTransferDetector {
 
         uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
 
-        (bool feeTakenOnTransfer, bool externalTransferFailed) = getExternalTransferFees(tokenBorrowed, amountBorrowed, balanceBeforeLoan);
+        (bool feeTakenOnTransfer, bool externalTransferFailed) =
+            getExternalTransferFees(tokenBorrowed, amountBorrowed, balanceBeforeLoan);
 
         balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         uint256 sellFeeBps;
@@ -129,7 +130,10 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice detects if a fee is taken on an external transfer or if it would fail
-    function getExternalTransferFees(ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 balanceBeforeLoan) internal returns (bool feeTakenOnTransfer, bool externalTransferFailed) {
+    function getExternalTransferFees(ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 balanceBeforeLoan)
+        internal
+        returns (bool feeTakenOnTransfer, bool externalTransferFailed)
+    {
         feeTakenOnTransfer = false;
         externalTransferFailed = false;
         balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
