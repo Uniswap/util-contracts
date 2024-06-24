@@ -20,6 +20,7 @@ contract FeeOnTransferDetector {
 
     error SameToken();
     error PairLookupFailed();
+    error UnknownExternalTransferFailure();
 
     uint256 constant BPS = 10_000;
     address internal immutable factoryV2;
@@ -129,8 +130,11 @@ contract FeeOnTransferDetector {
         }
     }
 
-    /// @notice detects if a fee is taken on an external transfer or if it would fail
-    function getExternalTransferFees(ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 balanceBeforeLoan)
+    /// @notice some tokens take fees even when not buy/selling to the pair, 
+    ///         or they fail when transferred within the context of an existing swap
+    /// @return feeTakenOnTransfer boolean indicating whether or not a fee is taken on token transfer
+    /// @return externalTransferFailed boolean indicating whether or not the external transfer failed
+    function checkExternalTransfer(ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 balanceBeforeLoan)
         internal
         returns (bool feeTakenOnTransfer, bool externalTransferFailed)
     {
@@ -148,7 +152,7 @@ contract FeeOnTransferDetector {
                 if (keccak256(bytes(reason)) == keccak256(bytes("TRANSFER_FAILED"))) {
                     externalTransferFailed = true;
                 } else {
-                    revert("UNKNOWN_EXTERNAL_TRANFER_FAILURE");
+                    revert UnknownExternalTransferFailure();
                 }
             } else {
                 feeTakenOnTransfer = abi.decode(revertData, (bool));
