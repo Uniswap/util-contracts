@@ -72,11 +72,11 @@ contract FeeOnTransferDetector {
         (uint256 amount0Out, uint256 amount1Out) =
             token == token0Address ? (amountToBorrow, uint256(0)) : (uint256(0), amountToBorrow);
 
-        uint256 balanceBeforeLoan = ERC20(token).balanceOf(address(this));
+        uint256 detectorBalanceBeforeLoan = ERC20(token).balanceOf(address(this));
 
         IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
 
-        try pair.swap(amount0Out, amount1Out, address(this), abi.encode(balanceBeforeLoan, amountToBorrow)) {}
+        try pair.swap(amount0Out, amount1Out, address(this), abi.encode(detectorBalanceBeforeLoan, amountToBorrow)) {}
         catch (bytes memory reason) {
             result = parseRevertReason(reason);
         }
@@ -98,8 +98,8 @@ contract FeeOnTransferDetector {
 
         ERC20 tokenBorrowed = ERC20(amount0 > 0 ? token0 : token1);
 
-        (uint256 balanceBeforeLoan, uint256 amountRequestedToBorrow) = abi.decode(data, (uint256, uint256));
-        uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - balanceBeforeLoan;
+        (uint256 detectorBalanceBeforeLoan, uint256 amountRequestedToBorrow) = abi.decode(data, (uint256, uint256));
+        uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - detectorBalanceBeforeLoan;
 
         uint256 buyFeeBps = _calculateBuyFee(amountRequestedToBorrow, amountBorrowed);
 
@@ -138,9 +138,9 @@ contract FeeOnTransferDetector {
         internal
         returns (uint256 sellFeeBps)
     {
-        uint256 balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
+        uint256 pairBalanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
         try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
-            uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
+            uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - pairBalanceBeforeLoan);
             sellFeeBps = sellFee * BPS / amountBorrowed;
         } catch (bytes memory) {
             sellFeeBps = buyFeeBps;
