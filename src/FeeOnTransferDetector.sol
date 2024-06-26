@@ -138,9 +138,10 @@ contract FeeOnTransferDetector {
         internal
         returns (uint256 sellFeeBps)
     {
-        uint256 pairBalanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
+        uint256 pairBalanceBeforeSell = tokenBorrowed.balanceOf(address(pair));
         try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
-            uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - pairBalanceBeforeLoan);
+            uint256 amountSold = tokenBorrowed.balanceOf(address(pair)) - pairBalanceBeforeSell;
+            uint256 sellFee = amountBorrowed - amountSold;
             sellFeeBps = sellFee * BPS / amountBorrowed;
         } catch (bytes memory) {
             sellFeeBps = buyFeeBps;
