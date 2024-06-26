@@ -101,19 +101,12 @@ contract FeeOnTransferDetector {
         (uint256 balanceBeforeLoan, uint256 amountRequestedToBorrow) = abi.decode(data, (uint256, uint256));
         uint256 amountBorrowed = tokenBorrowed.balanceOf(address(this)) - balanceBeforeLoan;
 
-        uint256 buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
+        uint256 buyFeeBps = _calculateBuyFee(amountRequestedToBorrow, amountBorrowed);
 
         (bool feeTakenOnTransfer, bool externalTransferFailed) =
-            checkExternalTransfer(tokenBorrowed, amountBorrowed, balanceBeforeLoan);
+            tryExternalTransferAndRevert(tokenBorrowed, amountBorrowed);
 
-        balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
-        uint256 sellFeeBps;
-        try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
-            uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
-            sellFeeBps = sellFee * BPS / amountBorrowed;
-        } catch (bytes memory) {
-            sellFeeBps = buyFeeBps;
-        }
+        uint256 sellFeeBps = _calculateSellFee(pair, tokenBorrowed, amountBorrowed, buyFeeBps);
 
         bytes memory fees = abi.encode(
             TokenFees({
@@ -130,17 +123,39 @@ contract FeeOnTransferDetector {
         }
     }
 
+    /// @notice simple helper function to calculate the buy fee in bps
+    function _calculateBuyFee(uint256 amountRequestedToBorrow, uint256 amountBorrowed)
+        internal
+        pure
+        returns (uint256 buyFeeBps)
+    {
+        buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
+    }
+
+    /// @notice helper function to calculate the sell fee in bps
+    /// - in the case where the transfer fails, we set the sell fee to be the same as the buy fee
+    function _calculateSellFee(IUniswapV2Pair pair, ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 buyFeeBps)
+        internal
+        returns (uint256 sellFeeBps)
+    {
+        uint256 balanceBeforeLoan = tokenBorrowed.balanceOf(address(pair));
+        try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
+            uint256 sellFee = amountBorrowed - (tokenBorrowed.balanceOf(address(pair)) - balanceBeforeLoan);
+            sellFeeBps = sellFee * BPS / amountBorrowed;
+        } catch (bytes memory) {
+            sellFeeBps = buyFeeBps;
+        }
+    }
+
     /// @notice some tokens take fees even when not buy/selling to the pair,
     ///         or they fail when transferred within the context of an existing swap
     /// @return feeTakenOnTransfer boolean indicating whether or not a fee is taken on token transfer
     /// @return externalTransferFailed boolean indicating whether or not the external transfer failed
-    function checkExternalTransfer(ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 balanceBeforeLoan)
+    function tryExternalTransferAndRevert(ERC20 tokenBorrowed, uint256 amountBorrowed)
         internal
         returns (bool feeTakenOnTransfer, bool externalTransferFailed)
     {
-        feeTakenOnTransfer = false;
-        externalTransferFailed = false;
-        balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
+        uint256 balanceBeforeLoan = tokenBorrowed.balanceOf(factoryV2);
         try this.callTransfer(tokenBorrowed, factoryV2, amountBorrowed, balanceBeforeLoan + amountBorrowed) {}
         catch (bytes memory revertData) {
             if (revertData.length > 32) {
