@@ -6,6 +6,8 @@ import {stdError} from "forge-std/StdError.sol";
 import {TokenFees, FeeOnTransferDetector} from "../src/FeeOnTransferDetector.sol";
 import {MockV2Factory} from "./mock/MockV2Factory.sol";
 import {MockFotToken} from "./mock/MockFotToken.sol";
+import {MockFotTokenWithExternalFees} from "./mock/MockFotTokenWithExternalFees.sol";
+import {MockReentrancyFotToken} from "./mock/MockReentrancyFotToken.sol";
 import {MockToken} from "./mock/MockToken.sol";
 
 interface IUniswapV2Pair {
@@ -33,6 +35,40 @@ contract FeeOnTransferDetectorTest is Test {
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
         assertEq(fees.buyFeeBps, 200);
         assertEq(fees.sellFeeBps, 500);
+        assertEq(fees.feeTakenOnTransfer, false);
+        assertEq(fees.externalTransferFailed, false);
+    }
+
+    function testBasicFotTokenWithExternalFees() public {
+        MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(500);
+        MockToken otherToken = new MockToken();
+        address pair = factory.deployPair(address(fotToken), address(otherToken));
+        fotToken.setPair(pair);
+        fotToken.mint(pair, 100 ether);
+        otherToken.mint(pair, 100 ether);
+        IUniswapV2Pair(pair).sync();
+
+        TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
+        assertEq(fees.buyFeeBps, 500);
+        assertEq(fees.sellFeeBps, 500);
+        assertEq(fees.feeTakenOnTransfer, true);
+        assertEq(fees.externalTransferFailed, false);
+    }
+
+    function testReentrancyFotToken() public {
+        MockReentrancyFotToken fotToken = new MockReentrancyFotToken(500);
+        MockToken otherToken = new MockToken();
+        address pair = factory.deployPair(address(fotToken), address(otherToken));
+        fotToken.setPair(pair);
+        fotToken.mint(pair, 100 ether);
+        otherToken.mint(pair, 100 ether);
+        IUniswapV2Pair(pair).sync();
+
+        TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
+        assertEq(fees.buyFeeBps, 500);
+        assertEq(fees.sellFeeBps, 500);
+        assertEq(fees.feeTakenOnTransfer, false);
+        assertEq(fees.externalTransferFailed, true);
     }
 
     function testBasicFotTokenFuzz(uint16 buyFee, uint16 sellFee) public {
@@ -49,6 +85,26 @@ contract FeeOnTransferDetectorTest is Test {
         TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
         assertEq(fees.buyFeeBps, buyFee);
         assertEq(fees.sellFeeBps, sellFee);
+        assertEq(fees.feeTakenOnTransfer, false);
+        assertEq(fees.externalTransferFailed, false);
+    }
+
+    function testBasicFotTokenWithExternalFeesFuzz(uint16 fee) public {
+        fee = uint16(bound(fee, 0, 10000));
+        MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(fee);
+        MockToken otherToken = new MockToken();
+        address pair = factory.deployPair(address(fotToken), address(otherToken));
+        fotToken.setPair(pair);
+        fotToken.mint(pair, 100 ether);
+        otherToken.mint(pair, 100 ether);
+        IUniswapV2Pair(pair).sync();
+
+        TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
+        assertEq(fees.buyFeeBps, fee);
+        assertEq(fees.sellFeeBps, fee);
+        bool feeTakenOnTransfer = (fee == 0 && fee == 0) ? false : true;
+        assertEq(fees.feeTakenOnTransfer, feeTakenOnTransfer);
+        assertEq(fees.externalTransferFailed, false);
     }
 
     function testTransferFailsErrorPassthrough() public {
