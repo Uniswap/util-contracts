@@ -15,6 +15,12 @@ struct TokenFees {
 }
 
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
+/// @notice this contract is not gas efficient and is meant to be called offchain
+///         it never holds tokens and all calls must not change its state
+/// @notice the contract also detects when a token may be a non-standard fee-on-transfer token:
+///             1. when a fee is taken on transfers not involving the pair
+///             2. when the token fails to transfer within the context of an existing swap
+///         in these cases, the return data will indicate the fee taken on transfer and the external transfer failure
 contract FeeOnTransferDetector {
     using SafeTransferLib for ERC20;
 
