@@ -7,6 +7,7 @@ import "solmate/utils/SafeTransferLib.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./lib/UniswapV2Library.sol";
 
+/// @notice Struct of fee related data for a token
 struct TokenFees {
     uint256 buyFeeBps;
     uint256 sellFeeBps;
@@ -36,6 +37,9 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice detects FoT fees for a single token
+    /// @param token the token to detect fees for
+    /// @param baseToken the token to borrow
+    /// @param amountToBorrow the amount to borrow
     function validate(address token, address baseToken, uint256 amountToBorrow)
         public
         returns (TokenFees memory fotResult)
@@ -44,6 +48,9 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice detects FoT fees for a batch of tokens
+    /// @param tokens the tokens to detect fees for
+    /// @param baseToken the token to borrow
+    /// @param amountToBorrow the amount to borrow
     function batchValidate(address[] calldata tokens, address baseToken, uint256 amountToBorrow)
         public
         returns (TokenFees[] memory fotResults)
@@ -88,6 +95,7 @@ contract FeeOnTransferDetector {
         }
     }
 
+    /// @notice parses the revert reason to get the encoded fees struct and bubbles up other reverts
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
         if (reason.length != 128) {
             assembly {
@@ -98,6 +106,7 @@ contract FeeOnTransferDetector {
         }
     }
 
+    /// @notice callback from the V2 pair
     function uniswapV2Call(address, uint256 amount0, uint256, bytes calldata data) external {
         IUniswapV2Pair pair = IUniswapV2Pair(msg.sender);
         (address token0, address token1) = (pair.token0(), pair.token1());
@@ -129,7 +138,7 @@ contract FeeOnTransferDetector {
         }
     }
 
-    /// @notice simple helper function to calculate the buy fee in bps
+    /// @notice helper function to calculate the buy fee in bps
     function _calculateBuyFee(uint256 amountRequestedToBorrow, uint256 amountBorrowed)
         internal
         pure
