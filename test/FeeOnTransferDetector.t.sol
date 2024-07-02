@@ -9,6 +9,7 @@ import {MockFotToken} from "./mock/MockFotToken.sol";
 import {MockFotTokenWithExternalFees} from "./mock/MockFotTokenWithExternalFees.sol";
 import {MockReentrancyFotToken} from "./mock/MockReentrancyFotToken.sol";
 import {MockToken} from "./mock/MockToken.sol";
+import {MockReenteringPair} from "./mock/MockReenteringPair.sol";
 
 interface IUniswapV2Pair {
     function sync() external;
@@ -117,6 +118,20 @@ contract FeeOnTransferDetectorTest is Test {
         IUniswapV2Pair(pair).sync();
 
         vm.expectRevert(stdError.arithmeticError);
+        detector.validate(address(fotToken), address(otherToken), 1 ether);
+    }
+
+    function testNoPairReentrancy() public {
+        MockFotToken fotToken = new MockFotToken(10001, 10001);
+        MockToken otherToken = new MockToken();
+        address pair = factory.deployPair(address(fotToken), address(otherToken));
+
+        MockReenteringPair reenteringPair = new MockReenteringPair();
+
+        vm.etch(pair, address(reenteringPair).code);
+        fotToken.setPair(pair);
+
+        vm.expectRevert();
         detector.validate(address(fotToken), address(otherToken), 1 ether);
     }
 }
