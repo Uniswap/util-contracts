@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "solmate/tokens/ERC20.sol";
 import "solmate/utils/SafeTransferLib.sol";
+import "solmate/utils/FixedPointMathLib.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./lib/UniswapV2Library.sol";
 
@@ -17,6 +18,7 @@ struct TokenFees {
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
 contract FeeOnTransferDetector {
     using SafeTransferLib for ERC20;
+    using FixedPointMathLib for uint256;
 
     error SameToken();
     error PairLookupFailed();
@@ -129,7 +131,7 @@ contract FeeOnTransferDetector {
         pure
         returns (uint256 buyFeeBps)
     {
-        buyFeeBps = (amountRequestedToBorrow - amountBorrowed) * BPS / amountRequestedToBorrow;
+        buyFeeBps = (amountRequestedToBorrow - amountBorrowed).mulDivUp(BPS, amountRequestedToBorrow);
     }
 
     /// @notice helper function to calculate the sell fee in bps
@@ -142,7 +144,7 @@ contract FeeOnTransferDetector {
         try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
             uint256 amountSold = tokenBorrowed.balanceOf(address(pair)) - pairBalanceBeforeSell;
             uint256 sellFee = amountBorrowed - amountSold;
-            sellFeeBps = sellFee * BPS / amountBorrowed;
+            sellFeeBps = sellFee.mulDivUp(BPS, amountBorrowed);
         } catch (bytes memory) {
             sellFeeBps = buyFeeBps;
         }

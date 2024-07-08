@@ -39,6 +39,23 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.externalTransferFailed, false);
     }
 
+    function testBasicFotTokenNoPrecisionLoss() public {
+        MockFotToken fotToken = new MockFotToken(200, 500);
+        MockToken otherToken = new MockToken();
+        address pair = factory.deployPair(address(fotToken), address(otherToken));
+        fotToken.setPair(pair);
+        fotToken.mint(pair, 100 ether);
+        otherToken.mint(pair, 100 ether);
+        IUniswapV2Pair(pair).sync();
+
+        // previously used to fail due to precision loss from integer division
+        TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 9999);
+        assertEq(fees.buyFeeBps, 200);
+        assertEq(fees.sellFeeBps, 500);
+        assertEq(fees.feeTakenOnTransfer, false);
+        assertEq(fees.externalTransferFailed, false);
+    }
+
     function testBasicFotTokenWithExternalFees() public {
         MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(500);
         MockToken otherToken = new MockToken();
