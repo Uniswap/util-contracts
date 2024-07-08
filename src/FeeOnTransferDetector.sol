@@ -96,6 +96,8 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice parses the revert reason to get the encoded fees struct and bubbles up other reverts
+    /// @param reason the revert reason
+    /// @return the decoded TokenFees struct
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
         if (reason.length != 128) {
             assembly {
@@ -107,6 +109,8 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice callback from the V2 pair
+    /// @param amount0 the amount of token0
+    /// @param data the encoded detectorBalanceBeforeLoan and amountRequestedToBorrow
     function uniswapV2Call(address, uint256 amount0, uint256, bytes calldata data) external {
         IUniswapV2Pair pair = IUniswapV2Pair(msg.sender);
         (address token0, address token1) = (pair.token0(), pair.token1());
