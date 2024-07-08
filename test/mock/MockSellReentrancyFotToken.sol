@@ -26,7 +26,6 @@ contract MockSellReentrancyFotToken is ERC20 {
 
         // Cannot overflow because the sum of all user
         // balances can't exceed the max uint256 value.
-        uint256 feeAmount;
         unchecked {
             if (to == pair || msg.sender == pair) {
                 uint256 feeAmount = amount * taxBps / 10000;
@@ -44,7 +43,7 @@ contract MockSellReentrancyFotToken is ERC20 {
                 : IUniswapV2Pair(pair).swap(0, 0, address(this), new bytes(0));
         }
 
-        emit Transfer(msg.sender, to, amount - feeAmount);
+        emit Transfer(msg.sender, to, amount);
 
         return true;
     }
