@@ -8,6 +8,7 @@ import "solmate/utils/FixedPointMathLib.sol";
 import "v2-core/interfaces/IUniswapV2Pair.sol";
 import "./lib/UniswapV2Library.sol";
 
+/// @notice Struct of fee related data for a token
 struct TokenFees {
     uint256 buyFeeBps;
     uint256 sellFeeBps;
@@ -16,6 +17,12 @@ struct TokenFees {
 }
 
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
+/// @notice this contract is not gas efficient and is meant to be called offchain
+///         it never holds tokens and all calls must not change its state
+/// @notice the contract also detects when a token may be a non-standard fee-on-transfer token:
+///             1. when a fee is taken on transfers not involving the pair
+///             2. when the token fails to transfer within the context of an existing swap
+///         in these cases, the return data will indicate the fee taken on transfer and the external transfer failure
 contract FeeOnTransferDetector {
     using SafeTransferLib for ERC20;
     using FixedPointMathLib for uint256;
@@ -32,6 +39,9 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice detects FoT fees for a single token
+    /// @param token the token to detect fees for
+    /// @param baseToken the token to borrow
+    /// @param amountToBorrow the amount to borrow
     function validate(address token, address baseToken, uint256 amountToBorrow)
         public
         returns (TokenFees memory fotResult)
@@ -40,6 +50,9 @@ contract FeeOnTransferDetector {
     }
 
     /// @notice detects FoT fees for a batch of tokens
+    /// @param tokens the tokens to detect fees for
+    /// @param baseToken the token to borrow
+    /// @param amountToBorrow the amount to borrow
     function batchValidate(address[] calldata tokens, address baseToken, uint256 amountToBorrow)
         public
         returns (TokenFees[] memory fotResults)
@@ -85,6 +98,9 @@ contract FeeOnTransferDetector {
         }
     }
 
+    /// @notice parses the revert reason to get the encoded fees struct and bubbles up other reverts
+    /// @param reason the revert reason
+    /// @return the decoded TokenFees struct
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
         if (reason.length != 128) {
             assembly {
@@ -95,6 +111,9 @@ contract FeeOnTransferDetector {
         }
     }
 
+    /// @notice callback from the V2 pair
+    /// @param amount0 the amount of token0
+    /// @param data the encoded detectorBalanceBeforeLoan and amountRequestedToBorrow
     function uniswapV2Call(address, uint256 amount0, uint256, bytes calldata data) external {
         IUniswapV2Pair pair = IUniswapV2Pair(msg.sender);
         (address token0, address token1) = (pair.token0(), pair.token1());
@@ -126,7 +145,7 @@ contract FeeOnTransferDetector {
         }
     }
 
-    /// @notice simple helper function to calculate the buy fee in bps
+    /// @notice helper function to calculate the buy fee in bps
     function _calculateBuyFee(uint256 amountRequestedToBorrow, uint256 amountBorrowed)
         internal
         pure
