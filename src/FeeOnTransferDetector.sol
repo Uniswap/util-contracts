@@ -14,6 +14,7 @@ struct TokenFees {
     uint256 sellFeeBps;
     bool feeTakenOnTransfer;
     bool externalTransferFailed;
+    bool sellReverted;
 }
 
 /// @notice Detects the buy and sell fee for a fee-on-transfer token
@@ -102,7 +103,7 @@ contract FeeOnTransferDetector {
     /// @param reason the revert reason
     /// @return the decoded TokenFees struct
     function parseRevertReason(bytes memory reason) private pure returns (TokenFees memory) {
-        if (reason.length != 128) {
+        if (reason.length != 160) {
             assembly {
                 revert(add(32, reason), mload(reason))
             }
@@ -128,14 +129,15 @@ contract FeeOnTransferDetector {
         (bool feeTakenOnTransfer, bool externalTransferFailed) =
             tryExternalTransferAndRevert(tokenBorrowed, amountBorrowed);
 
-        uint256 sellFeeBps = _calculateSellFee(pair, tokenBorrowed, amountBorrowed, buyFeeBps);
+        (uint256 sellFeeBps, bool sellReverted) = _calculateSellFee(pair, tokenBorrowed, amountBorrowed, buyFeeBps);
 
         bytes memory fees = abi.encode(
             TokenFees({
                 buyFeeBps: buyFeeBps,
                 sellFeeBps: sellFeeBps,
                 feeTakenOnTransfer: feeTakenOnTransfer,
-                externalTransferFailed: externalTransferFailed
+                externalTransferFailed: externalTransferFailed,
+                sellReverted: sellReverted
             })
         );
 
@@ -158,7 +160,7 @@ contract FeeOnTransferDetector {
     /// - in the case where the transfer fails, we set the sell fee to be the same as the buy fee
     function _calculateSellFee(IUniswapV2Pair pair, ERC20 tokenBorrowed, uint256 amountBorrowed, uint256 buyFeeBps)
         internal
-        returns (uint256 sellFeeBps)
+        returns (uint256 sellFeeBps, bool sellReverted)
     {
         uint256 pairBalanceBeforeSell = tokenBorrowed.balanceOf(address(pair));
         try this.callTransfer(tokenBorrowed, address(pair), amountBorrowed) {
@@ -167,6 +169,7 @@ contract FeeOnTransferDetector {
             sellFeeBps = sellFee.mulDivUp(BPS, amountBorrowed);
         } catch (bytes memory) {
             sellFeeBps = buyFeeBps;
+            sellReverted = true;
         }
     }
 

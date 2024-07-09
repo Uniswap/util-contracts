@@ -8,6 +8,7 @@ import {MockV2Factory} from "./mock/MockV2Factory.sol";
 import {MockFotToken} from "./mock/MockFotToken.sol";
 import {MockFotTokenWithExternalFees} from "./mock/MockFotTokenWithExternalFees.sol";
 import {MockReentrancyFotToken} from "./mock/MockReentrancyFotToken.sol";
+import {MockSellReentrancyFotToken} from "./mock/MockSellReentrancyFotToken.sol";
 import {MockToken} from "./mock/MockToken.sol";
 import {MockReenteringPair} from "./mock/MockReenteringPair.sol";
 
@@ -38,6 +39,7 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.sellFeeBps, 500);
         assertEq(fees.feeTakenOnTransfer, false);
         assertEq(fees.externalTransferFailed, false);
+        assertEq(fees.sellReverted, false);
     }
 
     function testBasicFotTokenNoPrecisionLoss() public {
@@ -55,6 +57,7 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.sellFeeBps, 500);
         assertEq(fees.feeTakenOnTransfer, false);
         assertEq(fees.externalTransferFailed, false);
+        assertEq(fees.sellReverted, false);
     }
 
     function testBasicFotTokenWithExternalFees() public {
@@ -71,6 +74,7 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.sellFeeBps, 500);
         assertEq(fees.feeTakenOnTransfer, true);
         assertEq(fees.externalTransferFailed, false);
+        assertEq(fees.sellReverted, false);
     }
 
     function testReentrancyFotToken() public {
@@ -87,6 +91,24 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.sellFeeBps, 500);
         assertEq(fees.feeTakenOnTransfer, false);
         assertEq(fees.externalTransferFailed, true);
+        assertEq(fees.sellReverted, false);
+    }
+
+    function testSellReentrancyFotToken() public {
+        MockSellReentrancyFotToken fotToken = new MockSellReentrancyFotToken(500);
+        MockToken otherToken = new MockToken();
+        address pair = factory.deployPair(address(fotToken), address(otherToken));
+        fotToken.setPair(pair);
+        fotToken.mint(pair, 100 ether);
+        otherToken.mint(pair, 100 ether);
+        IUniswapV2Pair(pair).sync();
+
+        TokenFees memory fees = detector.validate(address(fotToken), address(otherToken), 1 ether);
+        assertEq(fees.buyFeeBps, 500);
+        assertEq(fees.sellFeeBps, 500);
+        assertEq(fees.feeTakenOnTransfer, false);
+        assertEq(fees.externalTransferFailed, false);
+        assertEq(fees.sellReverted, true);
     }
 
     function testBasicFotTokenFuzz(uint16 buyFee, uint16 sellFee) public {
@@ -105,6 +127,7 @@ contract FeeOnTransferDetectorTest is Test {
         assertEq(fees.sellFeeBps, sellFee);
         assertEq(fees.feeTakenOnTransfer, false);
         assertEq(fees.externalTransferFailed, false);
+        assertEq(fees.sellReverted, false);
     }
 
     function testBasicFotTokenWithExternalFeesFuzz(uint16 fee) public {
@@ -123,6 +146,7 @@ contract FeeOnTransferDetectorTest is Test {
         bool feeTakenOnTransfer = (fee == 0 && fee == 0) ? false : true;
         assertEq(fees.feeTakenOnTransfer, feeTakenOnTransfer);
         assertEq(fees.externalTransferFailed, false);
+        assertEq(fees.sellReverted, false);
     }
 
     function testTransferFailsErrorPassthrough() public {
