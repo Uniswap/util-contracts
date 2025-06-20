@@ -18,8 +18,8 @@ contract ERC7914DetectorTest is Test {
     ICalibur public signerAccount;
     MockWrongReturnTypeContract public wrongReturnTypeContract;
     MockNonERC7914Contract public nonERC7914Contract;
-    function setUp() public {
 
+    function setUp() public {
         CaliburEntryUtils caliburEntryUtils = new CaliburEntryUtils();
         calibur = ICalibur(create2(caliburEntryUtils.getCaliburEntryCode(), bytes32(0)));
         _delegate(signer, address(calibur));
@@ -52,7 +52,7 @@ contract ERC7914DetectorTest is Test {
         // Test with non-ERC7914 contract
         bool hasSupport = detector.hasERC7914Support(address(nonERC7914Contract));
         assertFalse(hasSupport, "Non-ERC7914 contract should not be detected");
-        
+
         // Test with EOA
         address eoa = makeAddr("testEOA");
         hasSupport = detector.hasERC7914Support(eoa);
