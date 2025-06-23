@@ -112,8 +112,9 @@ contract FeeOnTransferDetectorTest is Test {
     }
 
     function testBasicFotTokenFuzz(uint16 buyFee, uint16 sellFee) public {
-        sellFee = uint16(bound(sellFee, 0, 10000));
-        buyFee = uint16(bound(buyFee, 0, 10000));
+        // detector.validate() will revert if the fee is 0, so we need to bound the fee to 1-9999
+        sellFee = uint16(bound(sellFee, 1, 9999));
+        buyFee = uint16(bound(buyFee, 1, 9999));
         MockFotToken fotToken = new MockFotToken(buyFee, sellFee);
         MockToken otherToken = new MockToken();
         address pair = factory.deployPair(address(fotToken), address(otherToken));
@@ -131,7 +132,8 @@ contract FeeOnTransferDetectorTest is Test {
     }
 
     function testBasicFotTokenWithExternalFeesFuzz(uint16 fee) public {
-        fee = uint16(bound(fee, 0, 10000));
+        // detector.validate() will revert if the fee is 0, so we need to bound the fee to 1-9999
+        fee = uint16(bound(fee, 0, 9999));
         MockFotTokenWithExternalFees fotToken = new MockFotTokenWithExternalFees(fee);
         MockToken otherToken = new MockToken();
         address pair = factory.deployPair(address(fotToken), address(otherToken));
