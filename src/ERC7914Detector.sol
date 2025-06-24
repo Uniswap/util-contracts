@@ -3,6 +3,17 @@ pragma solidity ^0.8.0;
 
 import {IERC7914} from "./interfaces/IERC7914.sol";
 
+/// @title ERC7914Detector
+/// @notice A utility contract for detecting ERC7914 support in wallet contracts
+/// @dev This contract provides functionality to check if a given address supports
+/// the ERC7914 standard, which enables native token transfers from smart contract
+/// wallets. It handles both regular contracts and EIP-7702 account abstraction wallets.
+///
+/// The contract works by:
+/// 1. Checking if the address is an EOA (Externally Owned Account) - EOAs cannot support ERC7914
+/// 2. For EIP-7702 wallets, checking if they delegate to a known ERC7914-compliant contract
+/// 3. For regular contracts, checking if they implement the transferFromNative function
+/// @custom:security-contact security@uniswap.org
 contract ERC7914Detector {
     // EIP-7702 constants from account-abstraction library
     bytes3 internal constant EIP7702_PREFIX = 0xef0100;
