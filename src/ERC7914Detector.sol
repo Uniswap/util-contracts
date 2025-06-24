@@ -13,6 +13,8 @@ import {IERC7914} from "./interfaces/IERC7914.sol";
 /// 1. Checking if the address is an EOA (Externally Owned Account) - EOAs cannot support ERC7914
 /// 2. For EIP-7702 wallets, checking if they delegate to a known ERC7914-compliant contract
 /// 3. For regular contracts, checking if they implement the transferFromNative function
+///
+/// Intended for offchain view calls. Not gas optimized.
 /// @custom:security-contact security@uniswap.org
 contract ERC7914Detector {
     // EIP-7702 constants from account-abstraction library
